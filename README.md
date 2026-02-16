@@ -16,7 +16,7 @@
 
 That's it. Works offline, works from a USB drive, works on GitHub Pages. Single file, zero dependencies.
 
-**Live demo:** [https://sysadmindoc.github.io/SearchHub/searchhub.html](https://sysadmindoc.github.io/SearchHub/searchhub.html)
+**Live demo:** [https://sysadmindoc.github.io/SearchHub/](https://sysadmindoc.github.io/SearchHub/)
 
 ## How It Works
 
