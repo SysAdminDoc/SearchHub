@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SearchHub v0.1.1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #0a0a0f;
+    --bg-card: #16161f;
+    --bg-card-hover: #1c1c28;
+    --bg-input: #1a1a26;
+    --border: #2a2a3a;
+    --border-focus: #5a5aff;
+    --text-primary: #e8e8f0;
+    --text-secondary: #8888a0;
+    --text-muted: #5a5a70;
+    --accent: #6c6cff;
+    --accent-glow: rgba(108, 108, 255, 0.25);
+    --accent-subtle: rgba(108, 108, 255, 0.08);
+    --rose: #fb7185;
+    --glass-border: rgba(255, 255, 255, 0.06);
+    --radius: 10px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(ellipse at 30% 20%, rgba(108,108,255,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(108,60,255,0.04) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg-primary); }
+  ::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3a3a4a; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  .header { padding: 48px 0 12px; text-align: center; }
+
+  .logo {
+    font-family: 'Outfit', sans-serif;
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    background: linear-gradient(135deg, #8080ff 0%, #6c6cff 40%, #a78bfa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 6px;
+    animation: fadeInDown 0.6s ease-out;
+  }
+
+  .tagline {
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: fadeInDown 0.6s ease-out 0.1s both;
+  }
+
+  .search-area { padding: 28px 0 20px; animation: fadeInUp 0.5s ease-out 0.2s both; }
+  .search-box { position: relative; max-width: 680px; margin: 0 auto; }
+
+  .search-input {
+    width: 100%;
+    padding: 16px 56px 16px 22px;
+    background: var(--bg-input);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-size: 16px;
+    outline: none;
+    transition: all 0.25s ease;
+  }
+
+  .search-input:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px var(--accent-glow), var(--shadow); }
+  .search-input::placeholder { color: var(--text-muted); }
+
+  .search-btn {
+    position: absolute;
+    right: 6px; top: 50%;
+    transform: translateY(-50%);
+    width: 42px; height: 42px;
+    background: var(--accent);
+    border: none;
+    border-radius: 9px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .search-btn:hover { background: #7a7aff; transform: translateY(-50%) scale(1.05); }
+  .search-btn:active { transform: translateY(-50%) scale(0.97); }
+  .search-btn svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+  .search-meta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .selected-count { color: var(--accent); font-weight: 600; }
+  .popup-hint { display: flex; align-items: center; gap: 6px; }
+  .popup-hint svg { opacity: 0.5; }
+
+  /* Tabs */
+  .tabs-wrapper {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10, 10, 15, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--glass-border);
+    margin: 0 -24px;
+    padding: 0 24px;
+    animation: fadeIn 0.4s ease-out 0.3s both;
+  }
+
+  .tabs-container {
+    position: relative;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 10px 0;
+    scroll-behavior: smooth;
+  }
+
+  .tabs::-webkit-scrollbar { display: none; }
+
+  .tabs-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    background: rgba(10, 10, 15, 0.9);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transition: all 0.15s ease;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .tabs-arrow:hover { background: var(--bg-card-hover); color: var(--text-primary); border-color: var(--text-muted); }
+  .tabs-arrow.visible { opacity: 1; pointer-events: auto; }
+  .tabs-arrow.left { left: -4px; }
+  .tabs-arrow.right { right: -4px; }
+  .tabs-arrow svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+  .tabs-fade {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+    pointer-events: none;
+    z-index: 5;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .tabs-fade.left { left: 0; background: linear-gradient(to right, rgba(10,10,15,0.95), transparent); }
+  .tabs-fade.right { right: 0; background: linear-gradient(to left, rgba(10,10,15,0.95), transparent); }
+  .tabs-fade.visible { opacity: 1; }
+
+  .tab {
+    padding: 8px 16px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    letter-spacing: 0.2px;
+    position: relative;
+  }
+
+  .tab:hover { color: var(--text-secondary); background: rgba(255,255,255,0.03); }
+  .tab.active { color: var(--accent); background: var(--accent-subtle); font-weight: 600; }
+  .tab .tab-count { font-size: 10px; margin-left: 4px; opacity: 0.5; }
+
+  .tab .tab-badge {
+    position: absolute;
+    top: 4px; right: 4px;
+    width: 7px; height: 7px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: none;
+  }
+
+  .tab.has-selected .tab-badge { display: block; }
+
+  /* Selected Bar */
+  .selected-bar { padding: 16px 0 6px; }
+  .selected-bar.empty { display: none; }
+
+  .selected-bar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .selected-bar-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+
+  .clear-all-btn {
+    font-size: 11px;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-weight: 500;
+    color: var(--rose);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.15s ease;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .clear-all-btn:hover { opacity: 1; background: rgba(251,113,133,0.08); }
+  .selected-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  .sel-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 8px 5px 10px;
+    background: var(--bg-card);
+    border: 1px solid rgba(108,108,255,0.2);
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+    animation: chipIn 0.2s ease-out;
+    transition: all 0.15s ease;
+  }
+
+  .sel-chip:hover { border-color: rgba(108,108,255,0.4); background: var(--bg-card-hover); }
+
+  .sel-chip-icon { width: 16px; height: 16px; border-radius: 3px; object-fit: contain; flex-shrink: 0; }
+  .sel-chip-cat { font-size: 10px; color: var(--text-muted); font-weight: 400; }
+
+  .sel-chip-x {
+    width: 18px; height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+    margin-left: 2px;
+  }
+
+  .sel-chip-x:hover { background: rgba(251,113,133,0.15); color: var(--rose); }
+  .sel-chip-x svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+
+  @keyframes chipIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+  /* Panels */
+  .panel { display: none; padding: 20px 0 40px; animation: fadeIn 0.3s ease-out; }
+  .panel.active { display: block; }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .panel-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .panel-controls { display: flex; align-items: center; gap: 8px; }
+
+  .panel-btn {
+    padding: 5px 12px;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .panel-btn:hover { color: var(--text-secondary); border-color: var(--text-muted); }
+
+  .filter-input {
+    padding: 5px 10px;
+    font-size: 12px;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-primary);
+    outline: none;
+    width: 160px;
+    transition: border-color 0.2s ease;
+  }
+
+  .filter-input:focus { border-color: var(--border-focus); }
+  .filter-input::placeholder { color: var(--text-muted); }
+
+  /* Engine Grid */
+  .engine-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 8px;
+  }
+
+  .engine-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg-card);
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .engine-item::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(108,108,255,0.06) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .engine-item:hover { background: var(--bg-card-hover); border-color: var(--border); }
+  .engine-item:hover::before { opacity: 1; }
+  .engine-item.checked { border-color: rgba(108,108,255,0.3); background: rgba(108,108,255,0.06); }
+  .engine-item.filtered-out { display: none; }
+
+  .engine-check {
+    width: 18px; height: 18px;
+    border: 1.5px solid var(--border);
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+    position: relative;
+    z-index: 1;
+  }
+
+  .engine-item.checked .engine-check { background: var(--accent); border-color: var(--accent); }
+  .engine-check svg { width: 11px; height: 11px; stroke: #fff; fill: none; stroke-width: 3; opacity: 0; transition: opacity 0.15s ease; }
+  .engine-item.checked .engine-check svg { opacity: 1; }
+
+  .engine-icon {
+    width: 22px; height: 22px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .engine-icon img { width: 18px; height: 18px; border-radius: 3px; object-fit: contain; }
+  .engine-info { flex: 1; min-width: 0; position: relative; z-index: 1; }
+
+  .engine-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .engine-desc {
+    font-size: 10.5px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 20px;
+    font-size: 13px;
+    color: var(--text-primary);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    z-index: 1000;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+    backdrop-filter: blur(12px);
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  .no-results {
+    text-align: center;
+    padding: 32px 16px;
+    color: var(--text-muted);
+    font-size: 13px;
+    display: none;
+  }
+
+  /* Animations */
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fadeInDown { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width: 600px) {
+    .logo { font-size: 32px; }
+    .engine-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+    .search-input { font-size: 15px; padding: 14px 50px 14px 16px; }
+    .container { padding: 0 14px; }
+    .tab { padding: 7px 12px; font-size: 11.5px; }
+    .filter-input { width: 120px; }
+    .panel-header { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="logo">SearchHub</div>
+    <div class="tagline" id="tagline"></div>
+  </div>
+
+  <div class="search-area">
+    <div class="search-box">
+      <input type="text" class="search-input" id="searchInput" placeholder="Search everything..." autofocus>
+      <button class="search-btn" id="searchBtn" title="Search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+    </div>
+    <div class="search-meta">
+      <span><span class="selected-count" id="selectedCount">0</span> engines selected</span>
+      <span class="popup-hint" title="Allow popups in your browser to open multiple tabs">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>Allow popups for multi-tab</span>
+      </span>
+    </div>
+  </div>
+</div>
+
+<div class="tabs-wrapper">
+  <div class="tabs-container">
+    <div class="tabs-fade left" id="fadeL"></div>
+    <div class="tabs-fade right" id="fadeR"></div>
+    <button class="tabs-arrow left" id="arrowL" onclick="scrollTabs(-1)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <button class="tabs-arrow right" id="arrowR" onclick="scrollTabs(1)"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
+    <div class="tabs" id="tabs"></div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="selected-bar empty" id="selectedBar">
+    <div class="selected-bar-header">
+      <span class="selected-bar-label">Selected engines</span>
+      <button class="clear-all-btn" onclick="clearAllEngines()">Clear all</button>
+    </div>
+    <div class="selected-chips" id="selectedChips"></div>
+  </div>
+  <div id="panels"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ENGINE_DATA = {
+  "Web Search": {
+    engines: [
+      { name: "Google", url: "https://www.google.com/search?q=", desc: "World's most popular" },
+      { name: "Bing", url: "https://www.bing.com/search?q=", desc: "Microsoft search" },
+      { name: "DuckDuckGo", url: "https://duckduckgo.com/?q=", desc: "Privacy-focused" },
+      { name: "Yahoo", url: "https://search.yahoo.com/search?p=", desc: "Classic search" },
+      { name: "Brave Search", url: "https://search.brave.com/search?q=", desc: "Independent index" },
+      { name: "Startpage", url: "https://www.startpage.com/sp/search?query=", desc: "Google results, private" },
+      { name: "Ecosia", url: "https://www.ecosia.org/search?q=", desc: "Plants trees" },
+      { name: "Qwant", url: "https://www.qwant.com/?q=", desc: "European privacy" },
+      { name: "Mojeek", url: "https://www.mojeek.com/search?q=", desc: "Own crawler index" },
+      { name: "Yandex", url: "https://yandex.com/search/?text=", desc: "Russian search" },
+      { name: "Baidu", url: "https://www.baidu.com/s?wd=", desc: "Chinese search" },
+      { name: "Swisscows", url: "https://swisscows.com/web?query=", desc: "Family-friendly, Swiss" },
+      { name: "Dogpile", url: "https://www.dogpile.com/serp?q=", desc: "Meta search" },
+      { name: "Ask.com", url: "https://www.ask.com/web?q=", desc: "Question-focused" },
+      { name: "AOL Search", url: "https://search.aol.com/aol/search?q=", desc: "Powered by Bing" },
+      { name: "Searx (public)", url: "https://searx.be/search?q=", desc: "Open-source meta" },
+      { name: "Presearch", url: "https://presearch.com/search?q=", desc: "Decentralized" },
+      { name: "Yep", url: "https://yep.com/web?q=", desc: "Revenue-sharing" },
+      { name: "You.com", url: "https://you.com/search?q=", desc: "AI-powered" },
+      { name: "Kagi", url: "https://kagi.com/search?q=", desc: "Premium, ad-free" },
+      { name: "Naver", url: "https://search.naver.com/search.naver?query=", desc: "South Korean portal" },
+      { name: "Seznam", url: "https://search.seznam.cz/?q=", desc: "Czech Republic search" },
+      { name: "Coc Coc", url: "https://coccoc.com/search?query=", desc: "Vietnamese search" },
+      { name: "MetaGer", url: "https://metager.org/meta/meta.ger3?eingabe=", desc: "German meta search" },
+      { name: "Lycos", url: "https://search.lycos.com/web/?q=", desc: "Classic web portal" },
+      { name: "Gigablast", url: "https://www.gigablast.com/search?q=", desc: "Open-source engine" },
+      { name: "Entireweb", url: "https://www.entireweb.com/search?q=", desc: "Swedish search" },
+      { name: "Oscobo", url: "https://www.oscobo.com/search?q=", desc: "UK privacy search" },
+      { name: "Lilo", url: "https://search.lilo.org/?q=", desc: "French charity search" },
+      { name: "Infinity Search", url: "https://infinitysearch.co/results?q=", desc: "Private, no tracking" },
+      { name: "Right Dao", url: "https://rightdao.com/search?q=", desc: "Minimalist engine" },
+      { name: "Marginalia", url: "https://search.marginalia.nu/search?query=", desc: "Small web search" },
+      { name: "Wiby", url: "https://wiby.me/?q=", desc: "Old-school web" },
+      { name: "Stract", url: "https://stract.com/search?q=", desc: "Open-source, hackable" },
+      { name: "Karma", url: "https://www.karmasearch.org/search?q=", desc: "Nonprofit-funded" },
+      { name: "Kiddle", url: "https://www.kiddle.co/s.php?q=", desc: "Safe search for kids" },
+      { name: "Disconnect Search", url: "https://search.disconnect.me/searchTerms/search?query=", desc: "Private proxy search" },
+    ]
+  },
+  "Images": {
+    engines: [
+      { name: "Google Images", url: "https://www.google.com/search?tbm=isch&q=", desc: "Largest image index" },
+      { name: "Bing Images", url: "https://www.bing.com/images/search?q=", desc: "Microsoft images" },
+      { name: "DuckDuckGo Images", url: "https://duckduckgo.com/?iax=images&ia=images&q=", desc: "Private image search" },
+      { name: "Yahoo Images", url: "https://images.search.yahoo.com/search/images?p=", desc: "Yahoo image search" },
+      { name: "Yandex Images", url: "https://yandex.com/images/search?text=", desc: "Strong reverse search" },
+      { name: "Flickr", url: "https://www.flickr.com/search/?text=", desc: "Photography community" },
+      { name: "Unsplash", url: "https://unsplash.com/s/photos/", desc: "Free high-res photos" },
+      { name: "Pexels", url: "https://www.pexels.com/search/", desc: "Free stock photos" },
+      { name: "Pinterest", url: "https://www.pinterest.com/search/pins/?q=", desc: "Visual discovery" },
+      { name: "Pixabay", url: "https://pixabay.com/images/search/", desc: "Free images & vectors" },
+      { name: "DeviantArt", url: "https://www.deviantart.com/search?q=", desc: "Art community" },
+      { name: "Imgur", url: "https://imgur.com/search?q=", desc: "Image hosting" },
+      { name: "500px", url: "https://500px.com/search?q=", desc: "Pro photography" },
+      { name: "Openverse", url: "https://openverse.org/search/?q=", desc: "Open-licensed media" },
+      { name: "Wikimedia Commons", url: "https://commons.wikimedia.org/w/index.php?search=", desc: "Free media repository" },
+      { name: "GIPHY", url: "https://giphy.com/search/", desc: "GIFs & stickers" },
+      { name: "Dreamstime", url: "https://www.dreamstime.com/search.php?srh_field=", desc: "Stock photography" },
+      { name: "Shutterstock", url: "https://www.shutterstock.com/search/", desc: "Premium stock images" },
+      { name: "Getty Images", url: "https://www.gettyimages.com/photos/", desc: "Editorial & creative" },
+      { name: "Adobe Stock", url: "https://stock.adobe.com/search?k=", desc: "Adobe stock photos" },
+      { name: "iStock", url: "https://www.istockphoto.com/search/2/image?phrase=", desc: "Getty budget stock" },
+      { name: "Stockvault", url: "https://www.stockvault.net/free-photos/?query=", desc: "Free stock photos" },
+      { name: "Brave Images", url: "https://search.brave.com/images?q=", desc: "Brave image search" },
+      { name: "ArtStation", url: "https://www.artstation.com/search?sort_by=relevance&query=", desc: "Digital art showcase" },
+    ]
+  },
+  "Videos": {
+    engines: [
+      { name: "YouTube", url: "https://www.youtube.com/results?search_query=", desc: "World's video platform" },
+      { name: "Google Videos", url: "https://www.google.com/search?tbm=vid&q=", desc: "Google video search" },
+      { name: "Bing Videos", url: "https://www.bing.com/videos/search?q=", desc: "Microsoft video search" },
+      { name: "DuckDuckGo Videos", url: "https://duckduckgo.com/?iax=videos&ia=videos&q=", desc: "Private video search" },
+      { name: "Dailymotion", url: "https://www.dailymotion.com/search/", desc: "Video sharing" },
+      { name: "Vimeo", url: "https://vimeo.com/search?q=", desc: "Pro video hosting" },
+      { name: "Rumble", url: "https://rumble.com/search/video?q=", desc: "Free speech video" },
+      { name: "Odysee", url: "https://odysee.com/$/search?q=", desc: "Decentralized video" },
+      { name: "Twitch", url: "https://www.twitch.tv/search?term=", desc: "Live streaming" },
+      { name: "PeerTube", url: "https://search.joinpeertube.org/search?search=", desc: "Federated video" },
+      { name: "TikTok", url: "https://www.tiktok.com/search?q=", desc: "Short-form video" },
+      { name: "Bitchute", url: "https://www.bitchute.com/search/?query=", desc: "Alt video platform" },
+      { name: "Internet Archive Video", url: "https://archive.org/search?query=&mediatype=movies&", desc: "Archived video" },
+      { name: "Veoh", url: "https://www.veoh.com/find/", desc: "Long-form video" },
+      { name: "Brave Videos", url: "https://search.brave.com/videos?q=", desc: "Brave video search" },
+      { name: "Yahoo Videos", url: "https://video.search.yahoo.com/search/?p=", desc: "Yahoo video search" },
+      { name: "Kick", url: "https://kick.com/search?query=", desc: "Streaming platform" },
+      { name: "Bilibili", url: "https://search.bilibili.com/all?keyword=", desc: "Chinese video site" },
+      { name: "Niconico", url: "https://www.nicovideo.jp/search/", desc: "Japanese video site" },
+    ]
+  },
+  "News": {
+    engines: [
+      { name: "Google News", url: "https://news.google.com/search?q=", desc: "News aggregator" },
+      { name: "Bing News", url: "https://www.bing.com/news/search?q=", desc: "Microsoft news" },
+      { name: "Yahoo News", url: "https://news.search.yahoo.com/search?p=", desc: "Yahoo news search" },
+      { name: "DuckDuckGo News", url: "https://duckduckgo.com/?iar=news&ia=news&q=", desc: "Private news search" },
+      { name: "Reuters", url: "https://www.reuters.com/search/news?query=", desc: "Global wire service" },
+      { name: "AP News", url: "https://apnews.com/search?q=", desc: "Associated Press" },
+      { name: "BBC", url: "https://www.bbc.co.uk/search?q=", desc: "British Broadcasting" },
+      { name: "NPR", url: "https://www.npr.org/search?query=", desc: "National Public Radio" },
+      { name: "Al Jazeera", url: "https://www.aljazeera.com/search/", desc: "International news" },
+      { name: "The Guardian", url: "https://www.theguardian.com/search?q=", desc: "UK newspaper" },
+      { name: "Brave News", url: "https://search.brave.com/news?q=", desc: "Brave news search" },
+      { name: "CNN", url: "https://www.cnn.com/search?q=", desc: "Cable news network" },
+      { name: "Fox News", url: "https://www.foxnews.com/search-results/search?q=", desc: "Fox news search" },
+      { name: "CNBC", url: "https://www.cnbc.com/search/?query=", desc: "Business & finance" },
+      { name: "Bloomberg", url: "https://www.bloomberg.com/search?query=", desc: "Financial news" },
+      { name: "The New York Times", url: "https://www.nytimes.com/search?query=", desc: "US newspaper of record" },
+      { name: "Washington Post", url: "https://www.washingtonpost.com/search?query=", desc: "US political news" },
+      { name: "USA Today", url: "https://www.usatoday.com/search/?q=", desc: "National daily" },
+      { name: "Newsweek", url: "https://www.newsweek.com/search/site/", desc: "News magazine" },
+      { name: "The Hill", url: "https://thehill.com/?s=", desc: "US politics" },
+      { name: "Politico", url: "https://www.politico.com/search?q=", desc: "Policy & politics" },
+      { name: "Axios", url: "https://www.axios.com/results?q=", desc: "Smart brevity news" },
+      { name: "Sky News", url: "https://news.sky.com/search?term=", desc: "UK broadcast news" },
+      { name: "France24", url: "https://www.france24.com/en/search?query=", desc: "French intl news" },
+      { name: "DW", url: "https://www.dw.com/search/?searchNavigationId=9097&languageCode=en&origin=gN&item=", desc: "German intl news" },
+      { name: "ABC News", url: "https://abcnews.go.com/search?searchtext=", desc: "American Broadcasting" },
+      { name: "CBS News", url: "https://www.cbsnews.com/search/?q=", desc: "CBS Broadcasting" },
+      { name: "NBC News", url: "https://www.nbcnews.com/search/?q=", desc: "NBC Broadcasting" },
+      { name: "PBS NewsHour", url: "https://www.pbs.org/newshour/search-results?q=", desc: "Public broadcasting" },
+      { name: "The Economist", url: "https://www.economist.com/search?q=", desc: "Global economics" },
+      { name: "Wall Street Journal", url: "https://www.wsj.com/search?query=", desc: "Business daily" },
+      { name: "HuffPost", url: "https://www.huffpost.com/search?keywords=", desc: "Progressive news" },
+      { name: "SCMP", url: "https://www.scmp.com/search/", desc: "South China Morning Post" },
+      { name: "Ars Technica", url: "https://arstechnica.com/?s=", desc: "Tech journalism" },
+      { name: "TechCrunch", url: "https://techcrunch.com/?s=", desc: "Tech startup news" },
+      { name: "The Verge", url: "https://www.theverge.com/search?q=", desc: "Tech & culture" },
+    ]
+  },
+  "Maps": {
+    engines: [
+      { name: "Google Maps", url: "https://www.google.com/maps/search/", desc: "Dominant map platform" },
+      { name: "Bing Maps", url: "https://www.bing.com/maps?q=", desc: "Microsoft maps" },
+      { name: "OpenStreetMap", url: "https://www.openstreetmap.org/search?query=", desc: "Open-source maps" },
+      { name: "Yandex Maps", url: "https://yandex.com/maps/?text=", desc: "Russian maps" },
+      { name: "HERE WeGo", url: "https://wego.here.com/search/", desc: "Nokia/HERE maps" },
+      { name: "Apple Maps", url: "https://maps.apple.com/?q=", desc: "Apple's map service" },
+      { name: "Waze", url: "https://www.waze.com/live-map/directions?q=", desc: "Community traffic" },
+      { name: "MapQuest", url: "https://www.mapquest.com/search?query=", desc: "Classic map service" },
+      { name: "Baidu Maps", url: "https://map.baidu.com/search/?querytype=s&wd=", desc: "Chinese maps" },
+      { name: "2GIS", url: "https://2gis.ru/search/", desc: "Russian city maps" },
+      { name: "Naver Maps", url: "https://map.naver.com/p/search/", desc: "Korean maps" },
+    ]
+  },
+  "Shopping": {
+    engines: [
+      { name: "Google Shopping", url: "https://www.google.com/search?tbm=shop&q=", desc: "Price comparison" },
+      { name: "Amazon", url: "https://www.amazon.com/s?k=", desc: "Everything store" },
+      { name: "eBay", url: "https://www.ebay.com/sch/i.html?_nkw=", desc: "Auctions & buy-now" },
+      { name: "Walmart", url: "https://www.walmart.com/search?q=", desc: "Low prices" },
+      { name: "Target", url: "https://www.target.com/s?searchTerm=", desc: "Expect more" },
+      { name: "Best Buy", url: "https://www.bestbuy.com/site/searchpage.jsp?st=", desc: "Electronics" },
+      { name: "Etsy", url: "https://www.etsy.com/search?q=", desc: "Handmade & vintage" },
+      { name: "AliExpress", url: "https://www.aliexpress.com/wholesale?SearchText=", desc: "China direct" },
+      { name: "Newegg", url: "https://www.newegg.com/p/pl?d=", desc: "Tech & components" },
+      { name: "Costco", url: "https://www.costco.com/CatalogSearch?keyword=", desc: "Wholesale club" },
+      { name: "Home Depot", url: "https://www.homedepot.com/s/", desc: "Home improvement" },
+      { name: "Craigslist", url: "https://www.craigslist.org/search?query=", desc: "Local classifieds" },
+      { name: "Facebook Marketplace", url: "https://www.facebook.com/marketplace/search/?query=", desc: "Local & shipping" },
+      { name: "Swappa", url: "https://swappa.com/search?q=", desc: "Used tech" },
+      { name: "Temu", url: "https://www.temu.com/search_result.html?search_key=", desc: "Budget shopping" },
+      { name: "SHEIN", url: "https://us.shein.com/pdsearch/", desc: "Fast fashion" },
+      { name: "Wish", url: "https://www.wish.com/search/", desc: "Discount marketplace" },
+      { name: "Wayfair", url: "https://www.wayfair.com/keyword.php?keyword=", desc: "Furniture & home" },
+      { name: "Overstock", url: "https://www.overstock.com/search?keywords=", desc: "Discount home goods" },
+      { name: "B&H Photo", url: "https://www.bhphotovideo.com/c/search?q=", desc: "Camera & tech" },
+      { name: "Rakuten", url: "https://www.rakuten.com/search/", desc: "Cashback shopping" },
+      { name: "Lowe's", url: "https://www.lowes.com/search?searchTerm=", desc: "Home improvement" },
+      { name: "Sam's Club", url: "https://www.samsclub.com/s/", desc: "Warehouse club" },
+      { name: "Zappos", url: "https://www.zappos.com/search?term=", desc: "Shoes & clothing" },
+      { name: "Mercari", url: "https://www.mercari.com/search/?keyword=", desc: "Used marketplace" },
+      { name: "Poshmark", url: "https://poshmark.com/search?query=", desc: "Resale fashion" },
+      { name: "ThriftBooks", url: "https://www.thriftbooks.com/browse/?b.search=", desc: "Used books" },
+      { name: "CamelCamelCamel", url: "https://camelcamelcamel.com/search?sq=", desc: "Amazon price tracker" },
+      { name: "Shopzilla", url: "https://www.shopzilla.com/search?keyword=", desc: "Price comparison" },
+      { name: "PriceGrabber", url: "https://www.pricegrabber.com/search?form_keyword=", desc: "Deal finder" },
+      { name: "Bing Shopping", url: "https://www.bing.com/shop?q=", desc: "Microsoft shopping" },
+      { name: "Nordstrom", url: "https://www.nordstrom.com/sr?keyword=", desc: "Department store" },
+      { name: "Macy's", url: "https://www.macys.com/shop/featured/", desc: "Department store" },
+      { name: "REI", url: "https://www.rei.com/search?q=", desc: "Outdoor gear" },
+      { name: "Micro Center", url: "https://www.microcenter.com/search/search_results.aspx?Ntt=", desc: "PC components" },
+      { name: "GameStop", url: "https://www.gamestop.com/search/?q=", desc: "Games & consoles" },
+    ]
+  },
+  "Social & Forums": {
+    engines: [
+      { name: "Reddit", url: "https://www.reddit.com/search/?q=", desc: "Community forums" },
+      { name: "GitHub", url: "https://github.com/search?q=", desc: "Code hosting" },
+      { name: "X / Twitter", url: "https://x.com/search?q=", desc: "Microblogging" },
+      { name: "Facebook", url: "https://www.facebook.com/search/top/?q=", desc: "Social network" },
+      { name: "LinkedIn", url: "https://www.linkedin.com/search/results/all/?keywords=", desc: "Professional network" },
+      { name: "Instagram", url: "https://www.instagram.com/explore/tags/", desc: "Photo & video" },
+      { name: "Mastodon", url: "https://mastodon.social/search?q=", desc: "Federated social" },
+      { name: "Bluesky", url: "https://bsky.app/search?q=", desc: "Decentralized social" },
+      { name: "Stack Overflow", url: "https://stackoverflow.com/search?q=", desc: "Developer Q&A" },
+      { name: "Wikipedia", url: "https://en.wikipedia.org/w/index.php?search=", desc: "Free encyclopedia" },
+      { name: "Quora", url: "https://www.quora.com/search?q=", desc: "Q&A platform" },
+      { name: "Medium", url: "https://medium.com/search?q=", desc: "Blogging platform" },
+      { name: "Hacker News", url: "https://hn.algolia.com/?q=", desc: "Tech community" },
+      { name: "Discord (Disboard)", url: "https://disboard.org/search?keyword=", desc: "Server discovery" },
+      { name: "Threads", url: "https://www.threads.net/search?q=", desc: "Meta's microblog" },
+      { name: "Tumblr", url: "https://www.tumblr.com/search/", desc: "Blog platform" },
+      { name: "Telegram", url: "https://t.me/s/", desc: "Messaging channels" },
+      { name: "Snapchat", url: "https://story.snapchat.com/search?q=", desc: "Snap stories" },
+      { name: "Goodreads", url: "https://www.goodreads.com/search?q=", desc: "Book community" },
+      { name: "Product Hunt", url: "https://www.producthunt.com/search?q=", desc: "New product launches" },
+      { name: "Lemmy", url: "https://lemmy.world/search?q=", desc: "Federated link aggregator" },
+      { name: "Letterboxd", url: "https://letterboxd.com/search/", desc: "Film community" },
+      { name: "Dribbble", url: "https://dribbble.com/search/", desc: "Design showcase" },
+      { name: "Behance", url: "https://www.behance.net/search/projects?search=", desc: "Adobe creative showcase" },
+      { name: "Substack", url: "https://substack.com/search/", desc: "Newsletter platform" },
+      { name: "Fandom", url: "https://www.fandom.com/?s=", desc: "Fan wikis & communities" },
+    ]
+  },
+  "Reverse Image": {
+    engines: [
+      { name: "Google Lens", url: "https://lens.google.com/search?p=", desc: "Visual search (upload)" },
+      { name: "TinEye", url: "https://tineye.com/search?url=", desc: "Reverse image pioneer" },
+      { name: "Yandex Reverse", url: "https://yandex.com/images/search?rpt=imageview&url=", desc: "Best face matching" },
+      { name: "Bing Visual Search", url: "https://www.bing.com/visualsearch", desc: "Microsoft visual" },
+      { name: "Google Reverse", url: "https://www.google.com/searchbyimage?image_url=", desc: "Google image search" },
+      { name: "SauceNAO", url: "https://saucenao.com/search.php?url=", desc: "Anime/art source" },
+      { name: "IQDB", url: "https://iqdb.org/?url=", desc: "Anime image board search" },
+      { name: "Lenso.ai", url: "https://lenso.ai/en/search-by-image?url=", desc: "AI reverse search" },
+      { name: "ImgOps", url: "https://imgops.com/", desc: "Multi-engine image tools" },
+      { name: "Baidu Image Search", url: "https://graph.baidu.com/pcpage/index?tpl_from=pc", desc: "Chinese reverse search" },
+    ]
+  },
+  "Academic": {
+    engines: [
+      { name: "Google Scholar", url: "https://scholar.google.com/scholar?q=", desc: "Academic papers" },
+      { name: "Semantic Scholar", url: "https://www.semanticscholar.org/search?q=", desc: "AI-powered papers" },
+      { name: "PubMed", url: "https://pubmed.ncbi.nlm.nih.gov/?term=", desc: "Biomedical literature" },
+      { name: "arXiv", url: "https://arxiv.org/search/?query=", desc: "Preprint server" },
+      { name: "JSTOR", url: "https://www.jstor.org/action/doBasicSearch?Query=", desc: "Journal archive" },
+      { name: "ResearchGate", url: "https://www.researchgate.net/search?q=", desc: "Researcher network" },
+      { name: "BASE", url: "https://www.base-search.net/Search/Results?lookfor=", desc: "Bielefeld Academic" },
+      { name: "CORE", url: "https://core.ac.uk/search?q=", desc: "Open access papers" },
+      { name: "Crossref", url: "https://search.crossref.org/?q=", desc: "DOI metadata" },
+      { name: "Wolfram Alpha", url: "https://www.wolframalpha.com/input?i=", desc: "Computational engine" },
+      { name: "OpenAlex", url: "https://openalex.org/works?filter=default.search%3A", desc: "Open scholarly data" },
+      { name: "SSRN", url: "https://papers.ssrn.com/sol3/results.cfm?txtKey_Words=", desc: "Social science papers" },
+      { name: "ERIC", url: "https://eric.ed.gov/?q=", desc: "Education research" },
+      { name: "IEEE Xplore", url: "https://ieeexplore.ieee.org/search/searchresult.jsp?queryText=", desc: "Engineering papers" },
+      { name: "ACM Digital Library", url: "https://dl.acm.org/action/doSearch?AllField=", desc: "Computing research" },
+      { name: "Science.gov", url: "https://www.science.gov/scigov/desktop/en/results.html?q=", desc: "US federal science" },
+      { name: "DOAJ", url: "https://doaj.org/search/articles?ref=homepage-box&source={%22query%22:{%22query_string%22:{%22query%22:%22TERM%22}}}", desc: "Open access journals" },
+      { name: "Dimensions", url: "https://app.dimensions.ai/discover/publication?search_text=", desc: "Linked research data" },
+      { name: "Scopus", url: "https://www.scopus.com/results/results.uri?sort=plf-f&src=s&sot=b&sdt=b&sl=20&s=TITLE-ABS-KEY(", desc: "Elsevier abstract DB" },
+      { name: "WorldCat", url: "https://search.worldcat.org/search?q=", desc: "Global library catalog" },
+      { name: "Google Books", url: "https://www.google.com/search?tbm=bks&q=", desc: "Book search" },
+      { name: "ClinicalTrials.gov", url: "https://clinicaltrials.gov/search?term=", desc: "Clinical trials DB" },
+    ]
+  },
+  "Code & Dev": {
+    engines: [
+      { name: "GitLab", url: "https://gitlab.com/search?search=", desc: "DevOps platform" },
+      { name: "Bitbucket", url: "https://bitbucket.org/repo/all?name=", desc: "Atlassian repos" },
+      { name: "SourceForge", url: "https://sourceforge.net/directory/?q=", desc: "Open-source projects" },
+      { name: "npm", url: "https://www.npmjs.com/search?q=", desc: "Node packages" },
+      { name: "PyPI", url: "https://pypi.org/search/?q=", desc: "Python packages" },
+      { name: "crates.io", url: "https://crates.io/search?q=", desc: "Rust packages" },
+      { name: "NuGet", url: "https://www.nuget.org/packages?q=", desc: ".NET packages" },
+      { name: "Docker Hub", url: "https://hub.docker.com/search?q=", desc: "Container images" },
+      { name: "MDN Web Docs", url: "https://developer.mozilla.org/en-US/search?q=", desc: "Web documentation" },
+      { name: "Codeberg", url: "https://codeberg.org/explore/repos?q=", desc: "Gitea-based forge" },
+      { name: "Searchcode", url: "https://searchcode.com/?q=", desc: "Source code search" },
+      { name: "grep.app", url: "https://grep.app/search?q=", desc: "Git repo grep" },
+      { name: "Hugging Face", url: "https://huggingface.co/models?search=", desc: "ML models & datasets" },
+      { name: "Kaggle", url: "https://www.kaggle.com/search?q=", desc: "Data science competitions" },
+      { name: "Replit", url: "https://replit.com/search?query=", desc: "Online IDE & repos" },
+      { name: "CodePen", url: "https://codepen.io/search/pens?q=", desc: "Frontend playground" },
+      { name: "JSFiddle", url: "https://jsfiddle.net/search?query=", desc: "JS/HTML/CSS sandbox" },
+      { name: "Maven Central", url: "https://search.maven.org/search?q=", desc: "Java packages" },
+      { name: "Hex.pm", url: "https://hex.pm/packages?search=", desc: "Elixir packages" },
+      { name: "pub.dev", url: "https://pub.dev/packages?q=", desc: "Dart/Flutter packages" },
+      { name: "pkg.go.dev", url: "https://pkg.go.dev/search?q=", desc: "Go packages" },
+      { name: "Homebrew", url: "https://formulae.brew.sh/formula/?search=", desc: "macOS packages" },
+      { name: "AUR", url: "https://aur.archlinux.org/packages?K=", desc: "Arch Linux packages" },
+      { name: "Flathub", url: "https://flathub.org/apps/search?q=", desc: "Linux Flatpak apps" },
+      { name: "AlternativeTo", url: "https://alternativeto.net/browse/search/?q=", desc: "Software alternatives" },
+    ]
+  },
+  "Reference": {
+    engines: [
+      { name: "Wiktionary", url: "https://en.wiktionary.org/w/index.php?search=", desc: "Free dictionary" },
+      { name: "Dictionary.com", url: "https://www.dictionary.com/browse/", desc: "Definitions" },
+      { name: "Thesaurus.com", url: "https://www.thesaurus.com/browse/", desc: "Synonyms" },
+      { name: "Urban Dictionary", url: "https://www.urbandictionary.com/define.php?term=", desc: "Slang definitions" },
+      { name: "Merriam-Webster", url: "https://www.merriam-webster.com/dictionary/", desc: "American dictionary" },
+      { name: "Internet Archive", url: "https://archive.org/search?query=", desc: "Wayback & media" },
+      { name: "Wayback Machine", url: "https://web.archive.org/web/*/", desc: "Website history" },
+      { name: "IMDb", url: "https://www.imdb.com/find/?q=", desc: "Movies & TV" },
+      { name: "Britannica", url: "https://www.britannica.com/search?query=", desc: "Classic encyclopedia" },
+      { name: "Snopes", url: "https://www.snopes.com/?s=", desc: "Fact checking" },
+      { name: "Wikidata", url: "https://www.wikidata.org/w/index.php?search=", desc: "Structured knowledge" },
+      { name: "Wikiquote", url: "https://en.wikiquote.org/w/index.php?search=", desc: "Quotation library" },
+      { name: "Open Library", url: "https://openlibrary.org/search?q=", desc: "Free book lending" },
+      { name: "Project Gutenberg", url: "https://www.gutenberg.org/ebooks/search/?query=", desc: "Free ebooks" },
+      { name: "Genius", url: "https://genius.com/search?q=", desc: "Song lyrics & annotations" },
+      { name: "Cambridge Dictionary", url: "https://dictionary.cambridge.org/search/english/?q=", desc: "British dictionary" },
+      { name: "Etymonline", url: "https://www.etymonline.com/search?q=", desc: "Word origins" },
+      { name: "RhymeZone", url: "https://www.rhymezone.com/r/rhyme.cgi?Word=", desc: "Rhymes & synonyms" },
+      { name: "Acronym Finder", url: "https://www.acronymfinder.com/~/search/af.aspx?string=exact&Acronym=", desc: "Abbreviation lookup" },
+      { name: "TV Tropes", url: "https://tvtropes.org/pmwiki/search_result.php?q=", desc: "Media trope wiki" },
+      { name: "Rotten Tomatoes", url: "https://www.rottentomatoes.com/search?search=", desc: "Movie reviews" },
+    ]
+  },
+  "AI Search": {
+    engines: [
+      { name: "Perplexity", url: "https://www.perplexity.ai/search?q=", desc: "AI answer engine" },
+      { name: "Phind", url: "https://www.phind.com/search?q=", desc: "Developer AI search" },
+      { name: "Exa", url: "https://exa.ai/search?q=", desc: "Neural search" },
+      { name: "ChatGPT", url: "https://chatgpt.com/?q=", desc: "OpenAI conversational" },
+      { name: "Gemini", url: "https://gemini.google.com/app?q=", desc: "Google AI assistant" },
+      { name: "Copilot", url: "https://copilot.microsoft.com/?q=", desc: "Microsoft AI" },
+      { name: "DeepSeek", url: "https://chat.deepseek.com/", desc: "Chinese open-source AI" },
+      { name: "Grok", url: "https://x.com/i/grok?text=", desc: "xAI search" },
+      { name: "iAsk", url: "https://iask.ai/?mode=question&q=", desc: "Free AI answers" },
+      { name: "Andi", url: "https://andisearch.com/search?q=", desc: "Visual AI search" },
+      { name: "Globe Explorer", url: "https://explorer.globe.engineer/?q=", desc: "AI topic explorer" },
+    ]
+  },
+  "Travel": {
+    engines: [
+      { name: "Google Flights", url: "https://www.google.com/travel/flights?q=", desc: "Flight search" },
+      { name: "Skyscanner", url: "https://www.skyscanner.com/transport/flights?query=", desc: "Global flight comparison" },
+      { name: "Kayak", url: "https://www.kayak.com/explore/", desc: "Travel meta search" },
+      { name: "Expedia", url: "https://www.expedia.com/Hotel-Search?destination=", desc: "Hotels & packages" },
+      { name: "Booking.com", url: "https://www.booking.com/searchresults.html?ss=", desc: "Hotel booking" },
+      { name: "Tripadvisor", url: "https://www.tripadvisor.com/Search?q=", desc: "Reviews & bookings" },
+      { name: "Airbnb", url: "https://www.airbnb.com/s/", desc: "Vacation rentals" },
+      { name: "VRBO", url: "https://www.vrbo.com/search?destination=", desc: "Vacation homes" },
+      { name: "Hotels.com", url: "https://www.hotels.com/search.do?q-destination=", desc: "Hotel deals" },
+      { name: "Momondo", url: "https://www.momondo.com/flight-search/", desc: "Cheap flights" },
+      { name: "Hopper", url: "https://www.hopper.com/", desc: "Price prediction" },
+      { name: "Rome2Rio", url: "https://www.rome2rio.com/s/", desc: "Multi-modal transport" },
+      { name: "Hostelworld", url: "https://www.hostelworld.com/st/search?search_keywords=", desc: "Budget accommodation" },
+      { name: "Priceline", url: "https://www.priceline.com/hotel-deals/search?searchTerm=", desc: "Name your price" },
+      { name: "Agoda", url: "https://www.agoda.com/search?city=", desc: "Asia-focused hotels" },
+      { name: "Orbitz", url: "https://www.orbitz.com/Hotel-Search?destination=", desc: "Travel booking" },
+      { name: "Travelocity", url: "https://www.travelocity.com/Hotel-Search?destination=", desc: "Travel deals" },
+      { name: "Lonely Planet", url: "https://www.lonelyplanet.com/search?q=", desc: "Travel guides" },
+      { name: "Atlas Obscura", url: "https://www.atlasobscura.com/search?q=", desc: "Unusual destinations" },
+      { name: "Google Hotels", url: "https://www.google.com/travel/hotels?q=", desc: "Hotel comparison" },
+      { name: "Yelp", url: "https://www.yelp.com/search?find_desc=", desc: "Local business reviews" },
+    ]
+  },
+  "Jobs": {
+    engines: [
+      { name: "Indeed", url: "https://www.indeed.com/jobs?q=", desc: "Largest job board" },
+      { name: "LinkedIn Jobs", url: "https://www.linkedin.com/jobs/search/?keywords=", desc: "Professional jobs" },
+      { name: "Glassdoor", url: "https://www.glassdoor.com/Job/jobs.htm?sc.keyword=", desc: "Jobs + reviews" },
+      { name: "ZipRecruiter", url: "https://www.ziprecruiter.com/jobs-search?search=", desc: "AI job matching" },
+      { name: "Monster", url: "https://www.monster.com/jobs/search?q=", desc: "Classic job board" },
+      { name: "CareerBuilder", url: "https://www.careerbuilder.com/jobs?keywords=", desc: "Career search" },
+      { name: "SimplyHired", url: "https://www.simplyhired.com/search?q=", desc: "Job aggregator" },
+      { name: "USAJobs", url: "https://www.usajobs.gov/search/results?k=", desc: "US government jobs" },
+      { name: "Wellfound", url: "https://wellfound.com/jobs?query=", desc: "Startup jobs" },
+      { name: "Remote OK", url: "https://remoteok.com/remote-jobs?query=", desc: "Remote jobs" },
+      { name: "We Work Remotely", url: "https://weworkremotely.com/remote-jobs/search?term=", desc: "Remote-only jobs" },
+      { name: "Dice", url: "https://www.dice.com/jobs?q=", desc: "Tech jobs" },
+      { name: "FlexJobs", url: "https://www.flexjobs.com/search?search=", desc: "Flexible & remote" },
+      { name: "Handshake", url: "https://app.joinhandshake.com/stu/postings?search_id=&query=", desc: "Student & early career" },
+      { name: "Snagajob", url: "https://www.snagajob.com/search?w=&q=", desc: "Hourly work" },
+      { name: "Robert Half", url: "https://www.roberthalf.com/us/en/jobs?query=", desc: "Professional staffing" },
+      { name: "Google Jobs", url: "https://www.google.com/search?q=jobs+", desc: "Google job listings" },
+    ]
+  },
+  "Food & Recipes": {
+    engines: [
+      { name: "DoorDash", url: "https://www.doordash.com/search/store/", desc: "Food delivery" },
+      { name: "Uber Eats", url: "https://www.ubereats.com/search?q=", desc: "Food delivery" },
+      { name: "Grubhub", url: "https://www.grubhub.com/search?queryText=", desc: "Food delivery" },
+      { name: "Allrecipes", url: "https://www.allrecipes.com/search?q=", desc: "Recipe database" },
+      { name: "Epicurious", url: "https://www.epicurious.com/search?q=", desc: "Gourmet recipes" },
+      { name: "Food Network", url: "https://www.foodnetwork.com/search/", desc: "TV chef recipes" },
+      { name: "Bon Appetit", url: "https://www.bonappetit.com/search?q=", desc: "Food magazine" },
+      { name: "Serious Eats", url: "https://www.seriouseats.com/search?q=", desc: "Science-based cooking" },
+      { name: "Yummly", url: "https://www.yummly.com/recipes?q=", desc: "Personalized recipes" },
+      { name: "Cookpad", url: "https://cookpad.com/us/search/", desc: "Community recipes" },
+      { name: "Tasty", url: "https://tasty.co/search?q=", desc: "BuzzFeed recipes" },
+      { name: "Instacart", url: "https://www.instacart.com/store/search?query=", desc: "Grocery delivery" },
+      { name: "OpenTable", url: "https://www.opentable.com/s?term=", desc: "Restaurant reservations" },
+    ]
+  },
+  "Music": {
+    engines: [
+      { name: "Spotify", url: "https://open.spotify.com/search/", desc: "Music streaming" },
+      { name: "Apple Music", url: "https://music.apple.com/us/search?term=", desc: "Apple streaming" },
+      { name: "SoundCloud", url: "https://soundcloud.com/search?q=", desc: "Independent music" },
+      { name: "Bandcamp", url: "https://bandcamp.com/search?q=", desc: "Artist-direct music" },
+      { name: "Last.fm", url: "https://www.last.fm/search?q=", desc: "Music scrobbling" },
+      { name: "Discogs", url: "https://www.discogs.com/search/?q=", desc: "Music database" },
+      { name: "MusicBrainz", url: "https://musicbrainz.org/search?query=", desc: "Open music encyclopedia" },
+      { name: "Deezer", url: "https://www.deezer.com/search/", desc: "French streaming" },
+      { name: "Tidal", url: "https://listen.tidal.com/search?q=", desc: "Hi-fi streaming" },
+      { name: "YouTube Music", url: "https://music.youtube.com/search?q=", desc: "Google music" },
+      { name: "Amazon Music", url: "https://music.amazon.com/search/", desc: "Amazon streaming" },
+      { name: "Rate Your Music", url: "https://rateyourmusic.com/search?searchterm=", desc: "Music ratings" },
+      { name: "Setlist.fm", url: "https://www.setlist.fm/search?query=", desc: "Concert setlists" },
+    ]
+  },
+  "Gaming": {
+    engines: [
+      { name: "Steam", url: "https://store.steampowered.com/search/?term=", desc: "PC game store" },
+      { name: "Epic Games", url: "https://store.epicgames.com/en-US/browse?q=", desc: "Epic game store" },
+      { name: "GOG", url: "https://www.gog.com/games?query=", desc: "DRM-free games" },
+      { name: "IGDB", url: "https://www.igdb.com/search?type=1&q=", desc: "Game database" },
+      { name: "Metacritic", url: "https://www.metacritic.com/search/", desc: "Game/movie reviews" },
+      { name: "HowLongToBeat", url: "https://howlongtobeat.com/?q=", desc: "Game length tracker" },
+      { name: "PCGamingWiki", url: "https://www.pcgamingwiki.com/w/index.php?search=", desc: "PC game fixes" },
+      { name: "IsThereAnyDeal", url: "https://isthereanydeal.com/search/?q=", desc: "Game deal tracker" },
+      { name: "GG.deals", url: "https://gg.deals/games/?title=", desc: "Game price comparison" },
+      { name: "GameFAQs", url: "https://gamefaqs.gamespot.com/search?game=", desc: "Guides & walkthroughs" },
+      { name: "Nexus Mods", url: "https://www.nexusmods.com/search/?gsearch=", desc: "Game mods" },
+      { name: "CurseForge", url: "https://www.curseforge.com/search?search=", desc: "Minecraft/game mods" },
+      { name: "Roblox", url: "https://www.roblox.com/search?keyword=", desc: "Roblox experiences" },
+      { name: "itch.io", url: "https://itch.io/search?q=", desc: "Indie games" },
+      { name: "Humble Bundle", url: "https://www.humblebundle.com/store/search?search=", desc: "Game bundles" },
+      { name: "PlayStation Store", url: "https://store.playstation.com/en-us/search/", desc: "PS games" },
+      { name: "Xbox Store", url: "https://www.xbox.com/en-US/search?q=", desc: "Xbox games" },
+      { name: "Nintendo eShop", url: "https://www.nintendo.com/us/search/#q=", desc: "Nintendo games" },
+      { name: "Speedrun.com", url: "https://www.speedrun.com/search?q=", desc: "Speedrun leaderboards" },
+      { name: "SteamDB", url: "https://steamdb.info/search/?a=app&q=", desc: "Steam analytics" },
+      { name: "ProtonDB", url: "https://www.protondb.com/search?q=", desc: "Linux game compat" },
+    ]
+  },
+  "Health": {
+    engines: [
+      { name: "WebMD", url: "https://www.webmd.com/search/search_results/default.aspx?query=", desc: "Health information" },
+      { name: "Mayo Clinic", url: "https://www.mayoclinic.org/search/search-results?q=", desc: "Medical reference" },
+      { name: "Healthline", url: "https://www.healthline.com/search?q1=", desc: "Health articles" },
+      { name: "MedlinePlus", url: "https://medlineplus.gov/search/?query=", desc: "NIH health info" },
+      { name: "Cleveland Clinic", url: "https://my.clevelandclinic.org/search?q=", desc: "Health library" },
+      { name: "NHS", url: "https://www.nhs.uk/search/results?q=", desc: "UK health service" },
+      { name: "Drugs.com", url: "https://www.drugs.com/search.php?searchterm=", desc: "Drug information" },
+      { name: "RxList", url: "https://www.rxlist.com/script/main/srchcont_rxlist.asp?src=", desc: "Medication lookup" },
+      { name: "Zocdoc", url: "https://www.zocdoc.com/search?query=", desc: "Find doctors" },
+      { name: "Psychology Today", url: "https://www.psychologytoday.com/us/therapists?search=", desc: "Find therapists" },
+      { name: "GoodRx", url: "https://www.goodrx.com/search?search=", desc: "Prescription prices" },
+      { name: "Examine.com", url: "https://examine.com/search/?q=", desc: "Supplement research" },
+      { name: "MyFitnessPal", url: "https://www.myfitnesspal.com/food/search?search=", desc: "Calorie & nutrition" },
+    ]
+  },
+  "Real Estate": {
+    engines: [
+      { name: "Zillow", url: "https://www.zillow.com/homes/", desc: "Home listings" },
+      { name: "Realtor.com", url: "https://www.realtor.com/realestateandhomes-search/", desc: "MLS listings" },
+      { name: "Redfin", url: "https://www.redfin.com/city/0/search?searchTerm=", desc: "Modern home search" },
+      { name: "Trulia", url: "https://www.trulia.com/for_sale/", desc: "Neighborhood insights" },
+      { name: "Apartments.com", url: "https://www.apartments.com/search/?query=", desc: "Apartment rentals" },
+      { name: "Rent.com", url: "https://www.rent.com/search?query=", desc: "Rental listings" },
+      { name: "Homes.com", url: "https://www.homes.com/search?q=", desc: "Home search" },
+      { name: "Compass", url: "https://www.compass.com/search/?q=", desc: "Luxury real estate" },
+      { name: "Coldwell Banker", url: "https://www.coldwellbanker.com/search?q=", desc: "Brokerage listings" },
+      { name: "LoopNet", url: "https://www.loopnet.com/search/?sk=", desc: "Commercial real estate" },
+      { name: "LandWatch", url: "https://www.landwatch.com/search?q=", desc: "Land for sale" },
+      { name: "Movoto", url: "https://www.movoto.com/search?q=", desc: "Home values" },
+      { name: "HotPads", url: "https://hotpads.com/search?q=", desc: "Rental search" },
+    ]
+  },
+  "Automotive": {
+    engines: [
+      { name: "AutoTrader", url: "https://www.autotrader.com/cars-for-sale/all-cars?searchRadius=0&keyword=", desc: "Car marketplace" },
+      { name: "Cars.com", url: "https://www.cars.com/shopping/results/?keyword=", desc: "Car listings" },
+      { name: "CarGurus", url: "https://www.cargurus.com/Cars/inventorylisting/viewDetailsFilterViewInventoryListing.action?searchId=&keyword=", desc: "Car deals" },
+      { name: "Kelley Blue Book", url: "https://www.kbb.com/cars-for-sale/all/?keyword=", desc: "Car values" },
+      { name: "Edmunds", url: "https://www.edmunds.com/search/?keyword=", desc: "Car reviews" },
+      { name: "CarFax", url: "https://www.carfax.com/Used-Cars/search?q=", desc: "Vehicle history" },
+      { name: "TrueCar", url: "https://www.truecar.com/used-cars-for-sale/listings/?searchRadius=any&q=", desc: "Fair pricing" },
+      { name: "Bring a Trailer", url: "https://bringatrailer.com/search/?s=", desc: "Enthusiast auctions" },
+      { name: "Cars & Bids", url: "https://carsandbids.com/search?q=", desc: "Doug DeMuro auctions" },
+      { name: "MotorTrend", url: "https://www.motortrend.com/search/?q=", desc: "Car reviews/news" },
+      { name: "AutoTempest", url: "https://www.autotempest.com/results?q=", desc: "Multi-site car search" },
+      { name: "Copart", url: "https://www.copart.com/lotSearchResults?query=", desc: "Salvage auctions" },
+      { name: "RockAuto", url: "https://www.rockauto.com/en/partsearch/?partnum=", desc: "Auto parts" },
+      { name: "Car and Driver", url: "https://www.caranddriver.com/search/?q=", desc: "Car journalism" },
+    ]
+  },
+  "Finance": {
+    engines: [
+      { name: "Yahoo Finance", url: "https://finance.yahoo.com/lookup?s=", desc: "Stock & market data" },
+      { name: "Google Finance", url: "https://www.google.com/finance/quote/", desc: "Stock quotes" },
+      { name: "MarketWatch", url: "https://www.marketwatch.com/search?q=", desc: "Market news" },
+      { name: "Seeking Alpha", url: "https://seekingalpha.com/search?q=", desc: "Investment analysis" },
+      { name: "Investopedia", url: "https://www.investopedia.com/search?q=", desc: "Finance education" },
+      { name: "EDGAR (SEC)", url: "https://efts.sec.gov/LATEST/search-index?q=", desc: "SEC filings" },
+      { name: "Morningstar", url: "https://www.morningstar.com/search?query=", desc: "Fund ratings" },
+      { name: "TradingView", url: "https://www.tradingview.com/search/?q=", desc: "Charts & analysis" },
+      { name: "Finviz", url: "https://finviz.com/search.ashx?t=", desc: "Stock screener" },
+      { name: "CoinMarketCap", url: "https://coinmarketcap.com/currencies/", desc: "Crypto prices" },
+      { name: "CoinGecko", url: "https://www.coingecko.com/en/search?query=", desc: "Crypto data" },
+      { name: "Bankrate", url: "https://www.bankrate.com/search/?q=", desc: "Rates & advice" },
+      { name: "NerdWallet", url: "https://www.nerdwallet.com/search?q=", desc: "Financial tools" },
+      { name: "Crunchbase", url: "https://www.crunchbase.com/textsearch?q=", desc: "Company/startup data" },
+      { name: "Glassdoor Salaries", url: "https://www.glassdoor.com/Salaries/search.htm?keyword=", desc: "Salary data" },
+      { name: "Macrotrends", url: "https://www.macrotrends.net/search?q=", desc: "Historical data" },
+    ]
+  },
+  "Learning": {
+    engines: [
+      { name: "Coursera", url: "https://www.coursera.org/search?query=", desc: "University courses" },
+      { name: "Udemy", url: "https://www.udemy.com/courses/search/?q=", desc: "Online courses" },
+      { name: "edX", url: "https://www.edx.org/search?q=", desc: "MIT/Harvard courses" },
+      { name: "Khan Academy", url: "https://www.khanacademy.org/search?page_search_query=", desc: "Free education" },
+      { name: "Skillshare", url: "https://www.skillshare.com/en/search?query=", desc: "Creative courses" },
+      { name: "LinkedIn Learning", url: "https://www.linkedin.com/learning/search?keywords=", desc: "Professional courses" },
+      { name: "YouTube", url: "https://www.youtube.com/results?search_query=tutorial+", desc: "Video tutorials" },
+      { name: "Codecademy", url: "https://www.codecademy.com/search?query=", desc: "Learn to code" },
+      { name: "freeCodeCamp", url: "https://www.freecodecamp.org/news/search/?query=", desc: "Free coding" },
+      { name: "MIT OpenCourseWare", url: "https://ocw.mit.edu/search/?q=", desc: "MIT free courses" },
+      { name: "Pluralsight", url: "https://www.pluralsight.com/search?q=", desc: "Tech courses" },
+      { name: "Brilliant", url: "https://brilliant.org/search/?q=", desc: "Math & science" },
+      { name: "Duolingo", url: "https://www.duolingo.com/dictionary/", desc: "Language learning" },
+      { name: "W3Schools", url: "https://www.w3schools.com/search/search_result.asp?search=", desc: "Web dev tutorials" },
+      { name: "TED", url: "https://www.ted.com/search?q=", desc: "Talks & ideas" },
+      { name: "Class Central", url: "https://www.classcentral.com/search?q=", desc: "Course aggregator" },
+      { name: "DataCamp", url: "https://www.datacamp.com/search?q=", desc: "Data science courses" },
+    ]
+  },
+  "Movies & TV": {
+    engines: [
+      { name: "TMDB", url: "https://www.themoviedb.org/search?query=", desc: "Open movie DB" },
+      { name: "JustWatch", url: "https://www.justwatch.com/us/search?q=", desc: "Where to stream" },
+      { name: "Trakt", url: "https://trakt.tv/search?query=", desc: "TV/movie tracker" },
+      { name: "TV Time", url: "https://www.tvtime.com/search?q=", desc: "Episode tracker" },
+      { name: "TheTVDB", url: "https://thetvdb.com/search?query=", desc: "TV series database" },
+      { name: "TVMaze", url: "https://www.tvmaze.com/search?q=", desc: "TV schedule & info" },
+      { name: "Common Sense Media", url: "https://www.commonsensemedia.org/search/", desc: "Family-safe reviews" },
+      { name: "Roger Ebert", url: "https://www.rogerebert.com/search?q=", desc: "Film criticism" },
+      { name: "Box Office Mojo", url: "https://www.boxofficemojo.com/search/?q=", desc: "Box office data" },
+    ]
+  },
+  "Podcasts": {
+    engines: [
+      { name: "Apple Podcasts", url: "https://podcasts.apple.com/us/search?term=", desc: "Apple podcast directory" },
+      { name: "Podchaser", url: "https://www.podchaser.com/search?q=", desc: "Podcast database" },
+      { name: "Listen Notes", url: "https://www.listennotes.com/search/?q=", desc: "Podcast search engine" },
+      { name: "Pocket Casts", url: "https://pocketcasts.com/search?q=", desc: "Podcast player" },
+      { name: "Podcast Addict", url: "https://podcastaddict.com/search?q=", desc: "Android podcatcher" },
+      { name: "Overcast", url: "https://overcast.fm/search?q=", desc: "iOS podcast app" },
+      { name: "Castbox", url: "https://castbox.fm/search?q=", desc: "Free podcast player" },
+      { name: "Player FM", url: "https://player.fm/search?q=", desc: "Podcast discovery" },
+      { name: "Rephonic", url: "https://rephonic.com/search?q=", desc: "Podcast analytics" },
+      { name: "Podtail", url: "https://podtail.com/en/search/?q=", desc: "Podcast catalog" },
+    ]
+  },
+  "Sports": {
+    engines: [
+      { name: "ESPN", url: "https://www.espn.com/search/_/q/", desc: "Sports network" },
+      { name: "Yahoo Sports", url: "https://sports.yahoo.com/search?q=", desc: "Sports news" },
+      { name: "CBS Sports", url: "https://www.cbssports.com/search/?q=", desc: "Scores & news" },
+      { name: "NFL", url: "https://www.nfl.com/search?query=", desc: "Football league" },
+      { name: "NBA", url: "https://www.nba.com/search?filters=&q=", desc: "Basketball league" },
+      { name: "MLB", url: "https://www.mlb.com/search?q=", desc: "Baseball league" },
+      { name: "NHL", url: "https://www.nhl.com/search?q=", desc: "Hockey league" },
+      { name: "BBC Sport", url: "https://www.bbc.com/sport/search?q=", desc: "UK sports" },
+      { name: "The Athletic", url: "https://www.nytimes.com/athletic/search/?query=", desc: "Sports journalism" },
+      { name: "Bleacher Report", url: "https://bleacherreport.com/search?q=", desc: "Sports media" },
+      { name: "Transfermarkt", url: "https://www.transfermarkt.com/schnellsuche/ergebnis/schnellsuche?query=", desc: "Soccer transfers" },
+      { name: "Flashscore", url: "https://www.flashscore.com/search/?q=", desc: "Live scores" },
+      { name: "Sofascore", url: "https://www.sofascore.com/search?q=", desc: "Sports statistics" },
+      { name: "Basketball Reference", url: "https://www.basketball-reference.com/search/search.fcgi?search=", desc: "NBA stats" },
+      { name: "Baseball Reference", url: "https://www.baseball-reference.com/search/search.fcgi?search=", desc: "MLB stats" },
+      { name: "Pro Football Ref", url: "https://www.pro-football-reference.com/search/search.fcgi?search=", desc: "NFL stats" },
+      { name: "UFC", url: "https://www.ufc.com/search?query=", desc: "MMA/UFC" },
+      { name: "FIFA", url: "https://www.fifa.com/en/search?q=", desc: "World football" },
+      { name: "MMA Fighting", url: "https://www.mmafighting.com/search?q=", desc: "MMA news" },
+    ]
+  },
+  "Legal & Gov": {
+    engines: [
+      { name: "Google Scholar (Case Law)", url: "https://scholar.google.com/scholar?as_sdt=2006&q=", desc: "Legal opinions" },
+      { name: "Justia", url: "https://www.justia.com/search?q=", desc: "Free case law" },
+      { name: "FindLaw", url: "https://www.findlaw.com/search.html?q=", desc: "Legal information" },
+      { name: "Casetext", url: "https://casetext.com/search?q=", desc: "AI legal research" },
+      { name: "CourtListener", url: "https://www.courtlistener.com/?q=", desc: "Free court opinions" },
+      { name: "Law.com", url: "https://www.law.com/search/?q=", desc: "Legal news" },
+      { name: "Avvo", url: "https://www.avvo.com/search/?q=", desc: "Find lawyers" },
+      { name: "Cornell LII", url: "https://www.law.cornell.edu/search?q=", desc: "Legal encyclopedia" },
+      { name: "USPTO", url: "https://ppubs.uspto.gov/pubwebapp/external.html?q=", desc: "US patent search" },
+      { name: "Google Patents", url: "https://patents.google.com/?q=", desc: "Patent search" },
+      { name: "WIPO", url: "https://patentscope.wipo.int/search/en/search.jsf?query=", desc: "Intl patents" },
+      { name: "US Congress", url: "https://www.congress.gov/search?q=", desc: "Legislation search" },
+      { name: "Regulations.gov", url: "https://www.regulations.gov/search?searchTerm=", desc: "Federal regulations" },
+      { name: "Nolo", url: "https://www.nolo.com/legal-encyclopedia/search?query=", desc: "Legal self-help" },
+      { name: "USA.gov", url: "https://www.usa.gov/search?query=", desc: "US gov portal" },
+      { name: "Data.gov", url: "https://catalog.data.gov/dataset?q=", desc: "US open data" },
+      { name: "Census Bureau", url: "https://data.census.gov/search?q=", desc: "Population data" },
+      { name: "BLS", url: "https://www.bls.gov/search/FullSiteResults.htm?query=", desc: "Labor statistics" },
+      { name: "FCC", url: "https://www.fcc.gov/search#q=", desc: "Communications" },
+      { name: "FDA", url: "https://search.usa.gov/search?affiliate=fda1&query=", desc: "Food & drug" },
+      { name: "NIH", url: "https://search.nih.gov/search?query=", desc: "Health research" },
+      { name: "NASA", url: "https://www.nasa.gov/search/?query=", desc: "Space agency" },
+      { name: "NOAA", url: "https://www.noaa.gov/search?query=", desc: "Weather & oceans" },
+      { name: "USGS", url: "https://www.usgs.gov/search?keywords=", desc: "Geological survey" },
+      { name: "UK Gov", url: "https://www.gov.uk/search/all?keywords=", desc: "UK government" },
+      { name: "EUR-Lex", url: "https://eur-lex.europa.eu/search.html?textScope0=ti-te&qid=&DB_TYPE_OF_ACT=regulation&CASE_LAW_SUMMARY=false&DTS_DOM=ALL&excConsLeg=true&typeOfActStatus=REGULATION&DTS_SUBDOM=ALL_ALL&lang=en&type=advanced&SUBDOM_INIT=ALL_ALL&page=1&qid=&DTS_DOM=ALL&search=true&text=", desc: "EU law" },
+      { name: "GovInfo", url: "https://www.govinfo.gov/search?query=", desc: "US gov publications" },
+    ]
+  },
+  "Science": {
+    engines: [
+      { name: "NASA Images", url: "https://images.nasa.gov/search?q=", desc: "Space imagery" },
+      { name: "Nature", url: "https://www.nature.com/search?q=", desc: "Science journal" },
+      { name: "Science Magazine", url: "https://www.science.org/action/doSearch?AllField=", desc: "AAAS journal" },
+      { name: "Scientific American", url: "https://www.scientificamerican.com/search/?q=", desc: "Science magazine" },
+      { name: "Phys.org", url: "https://phys.org/search/?search=", desc: "Science news" },
+      { name: "ScienceDirect", url: "https://www.sciencedirect.com/search?qs=", desc: "Elsevier papers" },
+      { name: "Springer", url: "https://link.springer.com/search?query=", desc: "Academic publisher" },
+      { name: "PLOS ONE", url: "https://journals.plos.org/plosone/search?q=", desc: "Open access journal" },
+      { name: "bioRxiv", url: "https://www.biorxiv.org/search/", desc: "Biology preprints" },
+      { name: "medRxiv", url: "https://www.medrxiv.org/search/", desc: "Medical preprints" },
+      { name: "ChemSpider", url: "https://www.chemspider.com/Search.aspx?q=", desc: "Chemistry database" },
+      { name: "Smithsonian", url: "https://www.si.edu/search?edan_q=", desc: "Museum collections" },
+      { name: "Space.com", url: "https://www.space.com/search?searchTerm=", desc: "Space news" },
+    ]
+  },
+  "Business": {
+    engines: [
+      { name: "LinkedIn Companies", url: "https://www.linkedin.com/search/results/companies/?keywords=", desc: "Company profiles" },
+      { name: "Glassdoor", url: "https://www.glassdoor.com/Search/results.htm?keyword=", desc: "Company reviews" },
+      { name: "BBB", url: "https://www.bbb.org/search?find_text=", desc: "Business ratings" },
+      { name: "D&B (Dun & Bradstreet)", url: "https://www.dnb.com/business-directory.html#q=", desc: "Business directory" },
+      { name: "Owler", url: "https://www.owler.com/search?q=", desc: "Company intelligence" },
+      { name: "ZoomInfo", url: "https://www.zoominfo.com/companies/search?q=", desc: "B2B contacts" },
+      { name: "AngelList", url: "https://www.angellist.com/search?q=", desc: "Startup directory" },
+      { name: "Trustpilot", url: "https://www.trustpilot.com/search?query=", desc: "Business reviews" },
+      { name: "G2", url: "https://www.g2.com/search?query=", desc: "Software reviews" },
+      { name: "Capterra", url: "https://www.capterra.com/search/?query=", desc: "Software comparison" },
+      { name: "SimilarWeb", url: "https://www.similarweb.com/website/", desc: "Website analytics" },
+      { name: "BuiltWith", url: "https://builtwith.com/?", desc: "Tech stack lookup" },
+      { name: "Pitchbook", url: "https://pitchbook.com/search?q=", desc: "Private market data" },
+    ]
+  },
+  "Downloads": {
+    engines: [
+      { name: "FileHippo", url: "https://filehippo.com/search?q=", desc: "Software downloads" },
+      { name: "CNET Download", url: "https://download.cnet.com/search/?q=", desc: "Software reviews" },
+      { name: "Softpedia", url: "https://www.softpedia.com/dyn-search.php?search_term=", desc: "Free downloads" },
+      { name: "MajorGeeks", url: "https://www.majorgeeks.com/mg/sortname/search?q=", desc: "Trusted downloads" },
+      { name: "Ninite", url: "https://ninite.com/", desc: "Batch installer" },
+      { name: "Chocolatey", url: "https://community.chocolatey.org/packages?q=", desc: "Windows pkg manager" },
+      { name: "WinGet", url: "https://winget.run/search?query=", desc: "MS package manager" },
+      { name: "F-Droid", url: "https://search.f-droid.org/?q=", desc: "FOSS Android apps" },
+      { name: "APKMirror", url: "https://www.apkmirror.com/?post_type=app_release&searchtype=apk&s=", desc: "Android APKs" },
+      { name: "Fosshub", url: "https://www.fosshub.com/search.html?q=", desc: "FOSS downloads" },
+      { name: "Snap Store", url: "https://snapcraft.io/search?q=", desc: "Ubuntu apps" },
+    ]
+  },
+};
+// State
+let checkedEngines = new Set();
+const faviconCache = {};
+
+function getFavicon(url) {
+  if (faviconCache[url]) return faviconCache[url];
+  try {
+    const domain = new URL(url.split('?')[0].replace(/\/+$/, '') || url).origin;
+    return (faviconCache[url] = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`);
+  } catch { return ''; }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function getEngineByID(id) {
+  const [ci, ei] = id.split('-').map(Number);
+  const cat = Object.keys(ENGINE_DATA)[ci];
+  if (!cat) return null;
+  return ENGINE_DATA[cat]?.engines[ei] || null;
+}
+
+function getCategoryForID(id) {
+  return Object.keys(ENGINE_DATA)[parseInt(id.split('-')[0])];
+}
+
+function updateCount() {
+  document.getElementById('selectedCount').textContent = checkedEngines.size;
+  renderSelectedBar();
+  updateTabBadges();
+}
+
+function updateTabBadges() {
+  const catHas = {};
+  checkedEngines.forEach(id => { catHas[id.split('-')[0]] = true; });
+  document.querySelectorAll('.tab').forEach((tab, i) => {
+    tab.classList.toggle('has-selected', !!catHas[i]);
+  });
+}
+
+function renderSelectedBar() {
+  const bar = document.getElementById('selectedBar');
+  const chips = document.getElementById('selectedChips');
+  if (checkedEngines.size === 0) { bar.classList.add('empty'); chips.innerHTML = ''; return; }
+  bar.classList.remove('empty');
+  chips.innerHTML = '';
+  checkedEngines.forEach(id => {
+    const eng = getEngineByID(id);
+    if (!eng) return;
+    const cat = getCategoryForID(id);
+    const chip = document.createElement('span');
+    chip.className = 'sel-chip';
+    chip.innerHTML = `<img class="sel-chip-icon" src="${getFavicon(eng.url)}" alt="" onerror="this.style.display='none'"><span>${eng.name}</span><span class="sel-chip-cat">${cat}</span><span class="sel-chip-x" onclick="removeEngine('${id}',event)" title="Remove"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>`;
+    chips.appendChild(chip);
+  });
+}
+
+function removeEngine(id, event) {
+  if (event) event.stopPropagation();
+  checkedEngines.delete(id);
+  const el = document.querySelector(`.engine-item[data-id="${id}"]`);
+  if (el) el.classList.remove('checked');
+  updateCount();
+  saveState();
+}
+
+function clearAllEngines() {
+  document.querySelectorAll('.engine-item.checked').forEach(el => el.classList.remove('checked'));
+  checkedEngines.clear();
+  updateCount();
+  saveState();
+}
+
+function buildUI() {
+  const tabsEl = document.getElementById('tabs');
+  const panelsEl = document.getElementById('panels');
+  const categories = Object.keys(ENGINE_DATA);
+  let totalEngines = 0;
+
+  categories.forEach((cat, ci) => {
+    const data = ENGINE_DATA[cat];
+    totalEngines += data.engines.length;
+
+    const tab = document.createElement('button');
+    tab.className = `tab${ci === 0 ? ' active' : ''}`;
+    tab.dataset.cat = cat;
+    tab.innerHTML = `${cat}<span class="tab-count">${data.engines.length}</span><span class="tab-badge"></span>`;
+    tab.onclick = () => switchTab(cat);
+    tabsEl.appendChild(tab);
+
+    const panel = document.createElement('div');
+    panel.className = `panel${ci === 0 ? ' active' : ''}`;
+    panel.id = `panel-${ci}`;
+    panel.dataset.cat = cat;
+    panel.innerHTML = `
+      <div class="panel-header">
+        <div class="panel-title">${cat}</div>
+        <div class="panel-controls">
+          <input type="text" class="filter-input" placeholder="Filter..." oninput="filterEngines(this,'${ci}')">
+          <button class="panel-btn" onclick="selectAll('${cat}')">Select all</button>
+          <button class="panel-btn" onclick="selectNone('${cat}')">Clear</button>
+        </div>
+      </div>
+      <div class="engine-grid" id="grid-${ci}"></div>
+      <div class="no-results">No engines match your filter.</div>
+    `;
+    panelsEl.appendChild(panel);
+
+    const grid = panel.querySelector('.engine-grid');
+    data.engines.forEach((eng, ei) => {
+      const id = `${ci}-${ei}`;
+      const item = document.createElement('div');
+      item.className = 'engine-item';
+      item.dataset.id = id;
+      item.dataset.cat = cat;
+      item.dataset.name = eng.name.toLowerCase();
+      item.onclick = () => toggleEngine(id, item);
+      item.innerHTML = `
+        <div class="engine-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="engine-icon"><img src="${getFavicon(eng.url)}" alt="" loading="lazy" onerror="this.style.display='none'"></div>
+        <div class="engine-info">
+          <div class="engine-name">${eng.name}</div>
+          <div class="engine-desc">${eng.desc}</div>
+        </div>
+      `;
+      grid.appendChild(item);
+    });
+  });
+
+  document.getElementById('tagline').textContent = `${totalEngines} engines \u2022 ${categories.length} categories \u2022 One place.`;
+}
+
+function switchTab(cat) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.cat === cat));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.dataset.cat === cat));
+  const active = document.querySelector('.tab.active');
+  if (active) active.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+}
+
+function toggleEngine(id, el) {
+  if (checkedEngines.has(id)) { checkedEngines.delete(id); el.classList.remove('checked'); }
+  else { checkedEngines.add(id); el.classList.add('checked'); }
+  updateCount();
+  saveState();
+}
+
+function selectAll(cat) {
+  document.querySelectorAll(`.engine-item[data-cat="${cat}"]:not(.filtered-out)`).forEach(el => {
+    checkedEngines.add(el.dataset.id);
+    el.classList.add('checked');
+  });
+  updateCount();
+  saveState();
+}
+
+function selectNone(cat) {
+  document.querySelectorAll(`.engine-item[data-cat="${cat}"]`).forEach(el => {
+    checkedEngines.delete(el.dataset.id);
+    el.classList.remove('checked');
+  });
+  updateCount();
+  saveState();
+}
+
+function filterEngines(input, ci) {
+  const q = input.value.toLowerCase().trim();
+  const grid = document.getElementById(`grid-${ci}`);
+  let visible = 0;
+  grid.querySelectorAll('.engine-item').forEach(item => {
+    const match = !q || item.dataset.name.includes(q);
+    item.classList.toggle('filtered-out', !match);
+    if (match) visible++;
+  });
+  grid.nextElementSibling.style.display = visible === 0 ? 'block' : 'none';
+}
+
+// Search — deduplicates URLs so the same page never opens twice
+function doSearch() {
+  const query = document.getElementById('searchInput').value.trim();
+  if (!query) { showToast('Enter a search query'); return; }
+  if (checkedEngines.size === 0) { showToast('Select at least one engine'); return; }
+
+  const seen = new Set();
+  const urls = [];
+  checkedEngines.forEach(id => {
+    const eng = getEngineByID(id);
+    if (!eng) return;
+    const full = eng.url + encodeURIComponent(query);
+    if (!seen.has(full)) { seen.add(full); urls.push(full); }
+  });
+
+  if (urls.length === 0) return;
+  let launched = 0, blocked = 0;
+
+  const first = window.open(urls[0], '_blank');
+  if (first) launched++; else blocked++;
+
+  if (urls.length > 1) {
+    urls.slice(1).forEach((url, i) => {
+      setTimeout(() => {
+        const w = window.open(url, '_blank');
+        if (w) launched++; else blocked++;
+        if (i === urls.length - 2) {
+          setTimeout(() => {
+            if (blocked > 0) showToast(`Opened ${launched} tab${launched!==1?'s':''}. ${blocked} blocked \u2014 allow popups for this site.`);
+            else showToast(`Launched ${launched} search${launched!==1?'es':''}`);
+          }, 100);
+        }
+      }, (i + 1) * 150);
+    });
+  } else {
+    showToast(blocked ? 'Popup blocked \u2014 allow popups for this site.' : 'Launched 1 search');
+  }
+}
+
+// Persistence — validates IDs on load so stale saves don't break
+function saveState() {
+  try { localStorage.setItem('searchhub_v2', JSON.stringify([...checkedEngines])); } catch {}
+}
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('searchhub_v2');
+    if (saved) {
+      JSON.parse(saved).forEach(id => {
+        if (getEngineByID(id)) {
+          checkedEngines.add(id);
+          const el = document.querySelector(`.engine-item[data-id="${id}"]`);
+          if (el) el.classList.add('checked');
+        }
+      });
+      updateCount();
+    }
+  } catch {}
+}
+
+function scrollTabs(dir) {
+  const tabs = document.getElementById('tabs');
+  tabs.scrollBy({ left: dir * 260, behavior: 'smooth' });
+}
+
+function updateTabArrows() {
+  const tabs = document.getElementById('tabs');
+  const atStart = tabs.scrollLeft <= 4;
+  const atEnd = tabs.scrollLeft + tabs.clientWidth >= tabs.scrollWidth - 4;
+  document.getElementById('arrowL').classList.toggle('visible', !atStart);
+  document.getElementById('arrowR').classList.toggle('visible', !atEnd);
+  document.getElementById('fadeL').classList.toggle('visible', !atStart);
+  document.getElementById('fadeR').classList.toggle('visible', !atEnd);
+}
+
+buildUI();
+loadState();
+
+// Init tab arrows after DOM built
+const tabsEl = document.getElementById('tabs');
+tabsEl.addEventListener('scroll', updateTabArrows);
+new ResizeObserver(updateTabArrows).observe(tabsEl);
+requestAnimationFrame(updateTabArrows);
+
+document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+document.getElementById('searchBtn').addEventListener('click', doSearch);
+</script>
+</body>
+</html>
