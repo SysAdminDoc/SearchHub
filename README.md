@@ -21,14 +21,14 @@ That's it. Works offline, works from a USB drive, works on GitHub Pages. Single 
 ## How It Works
 
 ```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   Select engines │────>│   Enter query    │────>│  Opens tabs with │
-│   via checkboxes │     │   & hit Search   │     │  results from    │
-│                  │     │                  │     │  each engine     │
-│  Selections      │     │  URL-deduped     │     │  150ms stagger   │
-│  persist in      │     │  before launch   │     │  to avoid popup  │
-│  localStorage    │     │                  │     │  blockers        │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
+┌─────────────────┐    ┌──────────────────┐     ┌──────────────────┐
+│  Select engines │───>│   Enter query    │────>│  Opens tabs with │
+│  via checkboxes │    │   & hit Search   │     │  results from    │
+│                 │    │                  │     │  each engine     │
+│ Selections      │    │  URL-deduped     │     │  150ms stagger   │
+│ persist in      │    │  before launch   │     │  to avoid popup  │
+│ localStorage    │    │                  │     │  blockers        │
+└─────────────────┘    └──────────────────┘     └──────────────────┘
 ```
 
 Each selected engine opens in its own browser tab with your query pre-filled in the URL. No APIs, no CORS issues, no server — it's a client-side search launcher.
