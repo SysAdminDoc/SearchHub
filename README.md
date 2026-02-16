@@ -8,8 +8,6 @@
 
 > Search 538 engines across 29 categories from a single page. No accounts, no backend, no tracking — just open `searchhub.html` and go.
 
-![Screenshot](screenshot.png)
-
 ## Quick Start
 
 1. Download `searchhub.html`
