@@ -6,7 +6,7 @@
 ![No Backend](https://img.shields.io/badge/backend-none-lightgrey)
 ![Engines](https://img.shields.io/badge/engines-538-6c6cff)
 
-> Search 538 engines across 29 categories from a single page. No accounts, no backend, no tracking — just open `searchhub.html` and go.
+> Search 538 engines across 29 categories from a single page.
 
 ## Quick Start
 
