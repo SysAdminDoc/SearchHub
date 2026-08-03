@@ -57,6 +57,7 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 | Density Modes | Persistent Comfy and Compact spacing modes for the catalog shell |
 | Share Snapshots | Encode the query and selected engines into a portable `q`/`e` URL |
 | Installable PWA | Manifest and service worker provide an installable offline app shell on HTTP(S) hosts |
+| Optional SearchHub Worker | Dependency-free Cloudflare Worker merges top results from curated HTML/RSS sources |
 | Chrome Omnibox | Optional Manifest V3 provider maps `sh tornado` to the default Google/Bing/DuckDuckGo bundle |
 | Bookmarklet | Draggable link seeds SearchHub from selected text on any page |
 | OpenSearch | Linked descriptor registers SearchHub as a browser search provider |
@@ -173,6 +174,9 @@ Just double-click `index.html`. Everything runs client-side; service-worker inst
 ### Any static host
 Upload `index.html`, `manifest.webmanifest`, `sw.js`, and `icon.png` to Netlify, Vercel, Cloudflare Pages, S3, or any web server. No build step required.
 
+### Optional SearchHub Worker
+`searchhub-worker.js` is a separate, zero-dependency Cloudflare Worker companion for deployments that want one merged results page. Paste it into a module Worker, or deploy it with the platform's standard Worker tooling, then open `https://your-worker.example/?q=your+query`. Add `&format=json` for a machine-readable response. It queries fixed DuckDuckGo HTML, Bing HTML, and Google News RSS sources in parallel, caps each source, deduplicates URLs, and reports unavailable sources instead of hiding failures. The core static app does not depend on this worker.
+
 ### Chrome omnibox (optional)
 Load the repository root as an unpacked extension from `chrome://extensions` with Developer mode enabled. Type `sh ` followed by a query in Chrome's address bar; the provider opens SearchHub with the default Google, Bing, and DuckDuckGo bundle.
 
@@ -187,8 +191,8 @@ The linked `opensearch.xml` descriptor lets compatible browsers add SearchHub as
 **Why do some tabs get blocked?**
 Browsers limit how many popups a single click can open. SearchHub staggers them at 150ms intervals which helps, but aggressive blockers may still catch some. Allow popups for the site to fix this.
 
-**Why not aggregate results on one page?**
-Browser CORS restrictions prevent fetching results from other domains client-side. A server-side proxy would work but defeats the goal of a single static file with no backend.
+**Why not aggregate results on one page by default?**
+Browser CORS restrictions prevent fetching results from other domains client-side. The primary app stays a single static file with no backend; deployments that explicitly want a server-side companion can use the optional `searchhub-worker.js` artifact.
 
 **Can I add my own engines?**
 Yes — open **Manage** to add an engine to an existing category, or edit the `ENGINE_DATA` object in the `<script>` block for source-level changes. Add entries in the format:

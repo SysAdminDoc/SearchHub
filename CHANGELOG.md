@@ -24,6 +24,7 @@ All notable changes to SearchHub will be documented in this file.
 - Added: Persistent Comfy and Compact density modes for cards, tabs, grids, and selected chips.
 - Added: Shareable query snapshots encoded as `q` and compact engine-token `e` URL parameters.
 - Added: Installable PWA manifest and origin-scoped offline service worker for static HTTP(S) hosts.
+- Added: Optional dependency-free SearchHub Worker for merged HTML or JSON results from curated sources.
 - Added: Optional Manifest V3 Chrome omnibox provider for `sh` keyword searches.
 - Added: Deployment-aware draggable bookmarklet that seeds searches from selected page text.
 - Added: Linked OpenSearch descriptor for browser search-provider registration.
