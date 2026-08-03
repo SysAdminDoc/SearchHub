@@ -8,6 +8,7 @@ All notable changes to SearchHub will be documented in this file.
 - Added: Optional category-aware site, file type, and news date query operators.
 - Added: Opt-in split view for up to four engines with per-tile tab fallbacks.
 - Added: Optional focused-tab mode that reuses the last search tab when available.
+- Added: Keyboard shortcuts for search focus, category navigation, and launching searches.
 
 ## [v0.1.1] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
 

@@ -49,6 +49,7 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 | Query Operators | Optional site, file type, and date filters applied by matching category |
 | Split View | Show up to four selected engines side-by-side with an Open in tab fallback |
 | Focused Tab | Optionally reuse the most recently opened tab for the next search |
+| Keyboard Shortcuts | `/` focuses search, `1–9`/`0` switch category tabs, `Ctrl+Enter` searches |
 | State Validation | Stale/broken saved state is silently discarded on load |
 | Dark Theme | Deep purple accent glassmorphism UI — no light mode |
 | Responsive | Adapts to mobile with 2-column grid and compact tabs |
@@ -109,6 +110,8 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 **Split view:** Turn on **Split view**, choose 2–4 engines, and search to load compatible results in one page. Sites that block framing can still be opened with their tile's **Open in tab** action.
 
 **Focused tab:** Turn on **Focused tab** to reuse the most recently opened search tab for the next search. If that tab was closed, SearchHub opens a new one.
+
+**Keyboard shortcuts:** Press `/` from anywhere outside an input to focus search, `1`–`9` or `0` to switch the first ten category tabs, and `Ctrl+Enter` to launch the current search from any control.
 
 ## Hosting
 

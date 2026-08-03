@@ -766,8 +766,8 @@
 
   <div class="search-area">
     <div class="search-box">
-      <input type="text" class="search-input" id="searchInput" placeholder="Search everything..." autofocus>
-      <button class="search-btn" id="searchBtn" title="Search">
+      <input type="text" class="search-input" id="searchInput" placeholder="Search everything..." title="/ focuses search &bull; 1-9 switches categories &bull; Ctrl+Enter searches" aria-keyshortcuts="/ Control+Enter" autofocus>
+      <button class="search-btn" id="searchBtn" title="Search (Ctrl+Enter)">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       </button>
     </div>
@@ -1610,6 +1610,12 @@ function isReusableTab(tab) {
   try { return Boolean(tab && !tab.closed); } catch { return false; }
 }
 
+function getCategoryHotkeyIndex(key) {
+  if (/^[1-9]$/.test(key)) return Number(key) - 1;
+  if (key === '0') return 9;
+  return -1;
+}
+
 function getFavicon(url) {
   if (faviconCache[url]) return faviconCache[url];
   try {
@@ -2203,6 +2209,26 @@ document.addEventListener('click', event => {
 });
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape' && !document.getElementById('splitOverlay').hidden) closeSplitView();
+  if (event.key === 'Enter' && event.ctrlKey && !event.altKey && !event.metaKey) {
+    event.preventDefault();
+    doSearch();
+    return;
+  }
+  const target = event.target;
+  const isEditable = target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
+  if (isEditable || (target && target.isContentEditable)) return;
+  if (event.key === '/' && !event.ctrlKey && !event.altKey && !event.metaKey) {
+    event.preventDefault();
+    document.getElementById('searchInput').focus();
+    return;
+  }
+  if (!document.getElementById('splitOverlay').hidden) return;
+  const categoryIndex = getCategoryHotkeyIndex(event.key);
+  const categories = Object.keys(ENGINE_DATA);
+  if (categoryIndex >= 0 && categoryIndex < categories.length) {
+    event.preventDefault();
+    switchTab(categories[categoryIndex]);
+  }
 });
 </script>
 </body>
