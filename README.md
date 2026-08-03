@@ -52,11 +52,12 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 | Preset Stacks | Replace the current selection with Privacy, AI, Academic, or OSINT bundles |
 | Keyboard Shortcuts | `/` focuses search, `1–9`/`0` switch category tabs, `Ctrl+Enter` searches |
 | Keyboard Navigation | Optional persistent roving-tabindex mode for selected-engine chips |
+| Themes | Persistent Light, OLED, Dracula, and Nord palettes switched through CSS variables |
 | Engine Editor | Add, remove, reorder, and reset engines through a localStorage overlay |
 | JSON Engine Sharing | Export the active catalog or import a validated catalog into matching categories |
 | Engine Health | Opt-in HEAD checks with healthy, warning, dead, unknown, and repeated-failure deprecation states |
 | State Validation | Stale/broken saved state is silently discarded on load |
-| Dark Theme | Deep purple accent glassmorphism UI — no light mode |
+| Glass UI | Theme-aware glassmorphism shell with responsive surfaces |
 | Responsive | Adapts to mobile with 2-column grid and compact tabs |
 | Zero Dependencies | Single HTML file, no build step, no npm, no frameworks |
 | Auto Favicons | Pulls icons from Google's favicon service per domain |
@@ -123,6 +124,8 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 **Keyboard shortcuts:** Press `/` from anywhere outside an input to focus search, `1`–`9` or `0` to switch the first ten category tabs, and `Ctrl+Enter` to launch the current search from any control.
 
 **Keyboard navigation:** Turn on **Keyboard nav** to move through selected-engine chips with arrow keys, `Home`, and `End`. `Delete`/`Backspace` removes the focused engine; `Enter` or `Space` focuses its remove control.
+
+**Themes:** Use the **Theme** picker to switch between Light, OLED, Dracula, and Nord palettes. The selected theme is stored locally and applies without rebuilding the catalog.
 
 **Engine editor:** Open **Manage** to customize a category. Additions, removals, and ordering changes stay local to this browser; **Reset category** restores the bundled defaults.
 

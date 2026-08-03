@@ -20,6 +20,7 @@ All notable changes to SearchHub will be documented in this file.
 - Added: Deep Maps entries for parcel lookup, county GIS, flight tracking, vessel tracking, and infrastructure maps.
 - Added: AI image and video discovery entries for Civitai, Replicate, and Hugging Face Spaces.
 - Added: Optional persistent keyboard navigation mode with roving selected-engine chip focus.
+- Added: Persistent Light, OLED, Dracula, and Nord theme palettes using CSS variable swaps.
 
 ## [v0.1.1] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
 
