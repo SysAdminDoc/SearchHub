@@ -45,6 +45,7 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 | Staggered Tab Opening | 150ms delay between tabs to bypass popup blockers |
 | Popup Block Detection | Toast notification when tabs are blocked, with guidance |
 | Persistent Selections | localStorage saves your engine picks across sessions |
+| Query History | Last 50 searches plus per-engine recent query lists, stored locally |
 | State Validation | Stale/broken saved state is silently discarded on load |
 | Dark Theme | Deep purple accent glassmorphism UI — no light mode |
 | Responsive | Adapts to mobile with 2-column grid and compact tabs |
@@ -97,6 +98,8 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 **Popup blockers:** The first tab always opens (browser considers it user-initiated). Remaining tabs stagger at 150ms intervals. If your browser blocks them, allow popups for the page — you'll see a toast notification with guidance.
 
 **Persistence:** Your selections save to `localStorage` automatically. Clearing browser data resets them.
+
+**Query history:** Click **History** below the search box to reuse one of your last 50 searches, or click the clock on an engine card to see queries used with that engine. Use **Clear all** to remove both lists from local storage.
 
 ## Hosting
 

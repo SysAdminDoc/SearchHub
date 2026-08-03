@@ -1,0 +1,16 @@
+# Changelog
+
+All notable changes to SearchHub will be documented in this file.
+
+## [Unreleased]
+
+- Added: Local query history with a 50-entry global list and per-engine recent queries.
+
+## [v0.1.1] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
+
+- Changed: Update README.md
+- Changed: Update README.md
+- Changed: Update README.md
+- Changed: Update README.md
+- Added: Add files via upload
+- Added: Add files via upload

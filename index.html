@@ -124,15 +124,101 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-wrap: wrap;
     gap: 16px;
     margin-top: 12px;
     font-size: 12px;
     color: var(--text-muted);
   }
 
+  .search-meta-actions { display: flex; align-items: center; gap: 16px; }
   .selected-count { color: var(--accent); font-weight: 600; }
   .popup-hint { display: flex; align-items: center; gap: 6px; }
   .popup-hint svg { opacity: 0.5; }
+
+  .history-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font: inherit;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .history-toggle:hover,
+  .history-toggle[aria-expanded="true"] {
+    color: var(--text-primary);
+    background: var(--bg-card);
+    border-color: var(--border);
+  }
+
+  .history-toggle svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  .query-history-menu {
+    max-width: 680px;
+    margin: 10px auto 0;
+    overflow: hidden;
+    background: rgba(24, 24, 36, 0.96);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 12px 36px rgba(0,0,0,0.35);
+    backdrop-filter: blur(16px);
+  }
+
+  .query-history-menu[hidden] { display: none; }
+
+  .history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  .history-title { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+
+  .history-clear {
+    padding: 3px 6px;
+    color: var(--rose);
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    opacity: 0.75;
+  }
+
+  .history-clear:hover { background: rgba(251,113,133,0.08); opacity: 1; }
+  .history-list { max-height: 280px; overflow-y: auto; padding: 4px; }
+
+  .history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 12px;
+    padding: 9px 10px;
+    color: var(--text-primary);
+    background: transparent;
+    border: none;
+    border-radius: 7px;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  .history-item:hover { background: var(--bg-card-hover); }
+  .history-query { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+  .history-time { flex-shrink: 0; color: var(--text-muted); font-size: 10px; }
+  .history-empty { padding: 18px 14px; color: var(--text-muted); font-size: 12px; text-align: center; }
 
   /* Tabs */
   .tabs-wrapper {
@@ -431,6 +517,30 @@
   .engine-icon img { width: 18px; height: 18px; border-radius: 3px; object-fit: contain; }
   .engine-info { flex: 1; min-width: 0; position: relative; z-index: 1; }
 
+  .engine-history-btn {
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+    padding: 0;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    opacity: 0.45;
+    transition: all 0.15s ease;
+  }
+
+  .engine-history-btn:hover,
+  .engine-history-btn.has-history { color: var(--accent); opacity: 1; }
+  .engine-history-btn:hover { background: var(--accent-subtle); border-color: rgba(108,108,255,0.2); }
+  .engine-history-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
   .engine-name {
     font-size: 13px;
     font-weight: 500;
@@ -510,10 +620,24 @@
     </div>
     <div class="search-meta">
       <span><span class="selected-count" id="selectedCount">0</span> engines selected</span>
-      <span class="popup-hint" title="Allow popups in your browser to open multiple tabs">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <span>Allow popups for multi-tab</span>
-      </span>
+      <div class="search-meta-actions">
+        <button class="history-toggle" id="historyToggle" type="button" aria-expanded="false" aria-controls="queryHistoryMenu">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 9 8 9"/><path d="M12 7v5l3 2"/></svg>
+          <span>History</span>
+        </button>
+        <span class="popup-hint" title="Allow popups in your browser to open multiple tabs">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <span>Allow popups for multi-tab</span>
+        </span>
+      </div>
+    </div>
+    <div class="query-history-menu" id="queryHistoryMenu" hidden>
+      <div class="history-header">
+        <span class="history-title" id="historyTitle">Recent queries</span>
+        <button class="history-clear" id="clearHistoryBtn" type="button">Clear all</button>
+      </div>
+      <div class="history-list" id="historyList"></div>
+      <div class="history-empty" id="historyEmpty">No recent searches yet.</div>
     </div>
   </div>
 </div>
@@ -1201,6 +1325,37 @@ const ENGINE_DATA = {
 // State
 let checkedEngines = new Set();
 const faviconCache = {};
+const QUERY_HISTORY_KEY = 'searchhub_query_history_v1';
+const ENGINE_HISTORY_KEY = 'searchhub_engine_history_v1';
+const QUERY_HISTORY_LIMIT = 50;
+const ENGINE_HISTORY_LIMIT = 10;
+const MAX_QUERY_LENGTH = 500;
+let queryHistory = [];
+let engineQueryHistory = {};
+let historyScope = { engineId: null };
+
+function normalizeHistoryEntries(value, limit) {
+  if (!Array.isArray(value)) return [];
+  const entries = [];
+  const seen = new Set();
+  value.forEach(raw => {
+    const query = typeof raw === 'string' ? raw.trim() : raw && typeof raw.query === 'string' ? raw.query.trim() : '';
+    if (!query || query.length > MAX_QUERY_LENGTH) return;
+    const key = query.toLocaleLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    const timestamp = raw && typeof raw === 'object' ? Number(raw.timestamp) : 0;
+    entries.push({ query, timestamp: Number.isFinite(timestamp) && timestamp > 0 ? timestamp : 0 });
+  });
+  return entries.slice(0, limit);
+}
+
+function addHistoryEntry(history, query, limit) {
+  const normalized = typeof query === 'string' ? query.trim() : '';
+  if (!normalized || normalized.length > MAX_QUERY_LENGTH) return normalizeHistoryEntries(history, limit);
+  const existing = normalizeHistoryEntries(history, limit).filter(entry => entry.query.toLocaleLowerCase() !== normalized.toLocaleLowerCase());
+  return [{ query: normalized, timestamp: Date.now() }, ...existing].slice(0, limit);
+}
 
 function getFavicon(url) {
   if (faviconCache[url]) return faviconCache[url];
@@ -1327,7 +1482,12 @@ function buildUI() {
           <div class="engine-name">${eng.name}</div>
           <div class="engine-desc">${eng.desc}</div>
         </div>
+        <button class="engine-history-btn" type="button" title="Recent queries for ${eng.name}" aria-label="Recent queries for ${eng.name}"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 9 8 9"/><path d="M12 7v5l3 2"/></svg></button>
       `;
+      item.querySelector('.engine-history-btn').addEventListener('click', event => {
+        event.stopPropagation();
+        openHistoryForEngine(id);
+      });
       grid.appendChild(item);
     });
   });
@@ -1379,6 +1539,124 @@ function filterEngines(input, ci) {
   grid.nextElementSibling.style.display = visible === 0 ? 'block' : 'none';
 }
 
+function getEngineHistory(id) {
+  return engineQueryHistory[id] || [];
+}
+
+function updateEngineHistoryIndicators() {
+  document.querySelectorAll('.engine-item').forEach(item => {
+    const button = item.querySelector('.engine-history-btn');
+    if (!button) return;
+    const hasHistory = getEngineHistory(item.dataset.id).length > 0;
+    button.classList.toggle('has-history', hasHistory);
+    button.setAttribute('aria-label', `${hasHistory ? 'View' : 'Show'} recent queries for ${getEngineByID(item.dataset.id)?.name || 'this engine'}`);
+  });
+}
+
+function formatHistoryTime(timestamp) {
+  if (!timestamp) return '';
+  try {
+    return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(timestamp));
+  } catch { return ''; }
+}
+
+function getVisibleHistory() {
+  return historyScope.engineId ? getEngineHistory(historyScope.engineId) : queryHistory;
+}
+
+function renderHistoryMenu() {
+  const title = document.getElementById('historyTitle');
+  const list = document.getElementById('historyList');
+  const empty = document.getElementById('historyEmpty');
+  const entries = getVisibleHistory();
+  const engine = historyScope.engineId ? getEngineByID(historyScope.engineId) : null;
+  title.textContent = engine ? `${engine.name} queries` : 'Recent queries';
+  list.innerHTML = '';
+  empty.style.display = entries.length ? 'none' : 'block';
+  entries.forEach(entry => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'history-item';
+    const query = document.createElement('span');
+    query.className = 'history-query';
+    query.textContent = entry.query;
+    const time = document.createElement('span');
+    time.className = 'history-time';
+    time.textContent = formatHistoryTime(entry.timestamp);
+    button.append(query, time);
+    button.addEventListener('click', () => useHistoryQuery(entry.query));
+    list.appendChild(button);
+  });
+}
+
+function setHistoryMenuOpen(open) {
+  const menu = document.getElementById('queryHistoryMenu');
+  const toggle = document.getElementById('historyToggle');
+  menu.hidden = !open;
+  toggle.setAttribute('aria-expanded', String(open));
+}
+
+function toggleQueryHistory() {
+  const menu = document.getElementById('queryHistoryMenu');
+  if (!menu.hidden && !historyScope.engineId) { setHistoryMenuOpen(false); return; }
+  historyScope = { engineId: null };
+  renderHistoryMenu();
+  setHistoryMenuOpen(true);
+}
+
+function openHistoryForEngine(id) {
+  if (!getEngineByID(id)) return;
+  historyScope = { engineId: id };
+  renderHistoryMenu();
+  setHistoryMenuOpen(true);
+}
+
+function useHistoryQuery(query) {
+  const input = document.getElementById('searchInput');
+  input.value = query;
+  input.focus();
+  setHistoryMenuOpen(false);
+}
+
+function persistQueryHistory() {
+  try { localStorage.setItem(QUERY_HISTORY_KEY, JSON.stringify(queryHistory)); } catch {}
+  try { localStorage.setItem(ENGINE_HISTORY_KEY, JSON.stringify(engineQueryHistory)); } catch {}
+}
+
+function recordQueryHistory(query, ids) {
+  queryHistory = addHistoryEntry(queryHistory, query, QUERY_HISTORY_LIMIT);
+  ids.forEach(id => {
+    if (!getEngineByID(id)) return;
+    engineQueryHistory[id] = addHistoryEntry(getEngineHistory(id), query, ENGINE_HISTORY_LIMIT);
+  });
+  persistQueryHistory();
+  updateEngineHistoryIndicators();
+  if (!document.getElementById('queryHistoryMenu').hidden) renderHistoryMenu();
+}
+
+function clearQueryHistory() {
+  queryHistory = [];
+  engineQueryHistory = {};
+  persistQueryHistory();
+  updateEngineHistoryIndicators();
+  historyScope = { engineId: null };
+  renderHistoryMenu();
+  showToast('Query history cleared');
+}
+
+function loadQueryHistory() {
+  try { queryHistory = normalizeHistoryEntries(JSON.parse(localStorage.getItem(QUERY_HISTORY_KEY)), QUERY_HISTORY_LIMIT); } catch { queryHistory = []; }
+  try {
+    const saved = JSON.parse(localStorage.getItem(ENGINE_HISTORY_KEY));
+    if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
+      Object.keys(saved).forEach(id => {
+        if (getEngineByID(id)) engineQueryHistory[id] = normalizeHistoryEntries(saved[id], ENGINE_HISTORY_LIMIT);
+      });
+    }
+  } catch { engineQueryHistory = {}; }
+  updateEngineHistoryIndicators();
+}
+
 // Search — deduplicates URLs so the same page never opens twice
 function doSearch() {
   const query = document.getElementById('searchInput').value.trim();
@@ -1395,6 +1673,7 @@ function doSearch() {
   });
 
   if (urls.length === 0) return;
+  recordQueryHistory(query, [...checkedEngines]);
   let launched = 0, blocked = 0;
 
   const first = window.open(urls[0], '_blank');
@@ -1454,8 +1733,10 @@ function updateTabArrows() {
   document.getElementById('fadeR').classList.toggle('visible', !atEnd);
 }
 
+// DOM bootstrap
 buildUI();
 loadState();
+loadQueryHistory();
 
 // Init tab arrows after DOM built
 const tabsEl = document.getElementById('tabs');
@@ -1465,6 +1746,11 @@ requestAnimationFrame(updateTabArrows);
 
 document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
 document.getElementById('searchBtn').addEventListener('click', doSearch);
+document.getElementById('historyToggle').addEventListener('click', toggleQueryHistory);
+document.getElementById('clearHistoryBtn').addEventListener('click', clearQueryHistory);
+document.addEventListener('click', event => {
+  if (!event.target.closest('.search-area') && !event.target.closest('.engine-history-btn')) setHistoryMenuOpen(false);
+});
 </script>
 </body>
 </html>
