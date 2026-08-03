@@ -1393,6 +1393,16 @@ let ENGINE_DATA = {
       { name: "Rotten Tomatoes", url: "https://www.rottentomatoes.com/search?search=", desc: "Movie reviews" },
     ]
   },
+  "OSINT & Threat Intel": {
+    engines: [
+      { name: "VirusTotal", url: "https://www.virustotal.com/gui/search/{q|urlencode}", desc: "Malware and indicator intelligence" },
+      { name: "URLScan", url: "https://urlscan.io/search/#q={q|urlencode}", desc: "Web scan and domain intelligence" },
+      { name: "Shodan", url: "https://www.shodan.io/search?query={q|urlencode}", desc: "Internet-connected device search" },
+      { name: "Censys", url: "https://search.censys.io/search?resource=hosts&q={q|urlencode}", desc: "Internet host and certificate search" },
+      { name: "AbuseIPDB", url: "https://www.abuseipdb.com/check/{q|urlencode}", desc: "IP abuse reputation lookup" },
+      { name: "urlhaus", url: "https://urlhaus.abuse.ch/browse.php?search={q|urlencode}", desc: "Malicious URL intelligence" },
+    ]
+  },
   "AI Search": {
     engines: [
       { name: "Perplexity", url: "https://www.perplexity.ai/search?q=", desc: "AI answer engine" },
@@ -1814,7 +1824,13 @@ const ENGINE_PRESETS = {
       ['Business', 'BuiltWith'],
       ['Business', 'SimilarWeb'],
       ['Legal & Gov', 'Google Patents'],
-      ['Legal & Gov', 'Data.gov']
+      ['Legal & Gov', 'Data.gov'],
+      ['OSINT & Threat Intel', 'VirusTotal'],
+      ['OSINT & Threat Intel', 'URLScan'],
+      ['OSINT & Threat Intel', 'Shodan'],
+      ['OSINT & Threat Intel', 'Censys'],
+      ['OSINT & Threat Intel', 'AbuseIPDB'],
+      ['OSINT & Threat Intel', 'urlhaus']
     ]
   }
 };

@@ -21,7 +21,7 @@ const resolve = (dataSet, preset) => JSON.parse(JSON.stringify(resolvePresetEngi
 assert.equal(resolve(ENGINE_DATA, 'privacy').length, 8);
 assert.equal(resolve(ENGINE_DATA, 'ai').length, 11);
 assert.equal(resolve(ENGINE_DATA, 'academic').length, 9);
-assert.equal(resolve(ENGINE_DATA, 'osint').length, 17);
+assert.equal(resolve(ENGINE_DATA, 'osint').length, 23);
 const data = {
   'Web Search': { engines: [
     { name: 'Custom', url: 'https://custom.test', desc: '' },
