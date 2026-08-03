@@ -216,6 +216,75 @@
   .operator-input::placeholder { color: var(--text-muted); opacity: 0.75; }
   .operator-help { margin: 10px 0 0; color: var(--text-muted); font-size: 10px; line-height: 1.4; }
 
+  .split-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font: inherit;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .split-toggle:hover,
+  .split-toggle[aria-pressed="true"] {
+    color: var(--text-primary);
+    background: var(--bg-card);
+    border-color: var(--border);
+  }
+
+  .split-toggle svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .split-count-wrap { display: inline-flex; align-items: center; gap: 5px; color: var(--text-muted); font-size: 11px; }
+  .split-count-wrap[hidden] { display: none; }
+  .split-count { padding: 3px 5px; color: var(--text-primary); background: var(--bg-input); border: 1px solid var(--border); border-radius: 5px; font: inherit; font-size: 11px; outline: none; }
+
+  .split-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(5, 5, 10, 0.82);
+    backdrop-filter: blur(12px);
+  }
+
+  .split-overlay[hidden] { display: none; }
+  .split-open { overflow: hidden; }
+
+  .split-dialog {
+    display: flex;
+    flex-direction: column;
+    width: min(1200px, 100%);
+    max-height: 100%;
+    overflow: hidden;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.55);
+  }
+
+  .split-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 16px; border-bottom: 1px solid var(--glass-border); }
+  .split-header-title { color: var(--text-primary); font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; }
+  .split-header-status { margin-top: 2px; color: var(--text-muted); font-size: 11px; }
+  .split-close { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--text-muted); background: transparent; border: 1px solid transparent; border-radius: 7px; cursor: pointer; }
+  .split-close:hover { color: var(--text-primary); background: var(--bg-card-hover); border-color: var(--border); }
+  .split-close svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+  .split-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; overflow: auto; padding: 12px; }
+  .split-tile { min-width: 0; overflow: hidden; background: var(--bg-card); border: 1px solid var(--border); border-radius: 9px; }
+  .split-tile-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; }
+  .split-tile-name { min-width: 0; overflow: hidden; color: var(--text-primary); font-size: 12px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+  .split-tile-open { padding: 4px 7px; color: var(--accent); background: transparent; border: 1px solid rgba(108,108,255,0.25); border-radius: 5px; font: inherit; font-size: 10px; cursor: pointer; white-space: nowrap; }
+  .split-tile-open:hover { background: var(--accent-subtle); }
+  .split-tile-frame { height: 330px; background: #fff; border-top: 1px solid var(--glass-border); }
+  .split-tile-frame iframe { width: 100%; height: 100%; display: block; border: 0; background: #fff; }
+  .split-tile-note { padding: 5px 10px; color: var(--text-muted); font-size: 10px; border-top: 1px solid var(--glass-border); }
+
   .query-history-menu {
     max-width: 680px;
     margin: 10px auto 0;
@@ -657,6 +726,9 @@
     .tab { padding: 7px 12px; font-size: 11.5px; }
     .filter-input { width: 120px; }
     .operator-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .split-overlay { padding: 10px; }
+    .split-grid { grid-template-columns: 1fr; }
+    .split-tile-frame { height: 260px; }
     .panel-header { flex-direction: column; align-items: flex-start; }
   }
 </style>
@@ -687,6 +759,11 @@
           <svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
           <span>Operators</span>
         </button>
+        <button class="split-toggle" id="splitToggle" type="button" aria-pressed="false">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="7" height="16" rx="1"/><rect x="14" y="4" width="7" height="16" rx="1"/></svg>
+          <span>Split view</span>
+        </button>
+        <label class="split-count-wrap" id="splitCountWrap" hidden><span>Show</span><select class="split-count" id="splitCount" aria-label="Number of split view engines"><option value="2">2</option><option value="3">3</option><option value="4" selected>4</option></select></label>
         <span class="popup-hint" title="Allow popups in your browser to open multiple tabs">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
           <span>Allow popups for multi-tab</span>
@@ -742,6 +819,19 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<div class="split-overlay" id="splitOverlay" hidden>
+  <div class="split-dialog" role="dialog" aria-modal="false" aria-labelledby="splitTitle">
+    <div class="split-header">
+      <div>
+        <div class="split-header-title" id="splitTitle">Split search</div>
+        <div class="split-header-status" id="splitStatus" aria-live="polite"></div>
+      </div>
+      <button class="split-close" id="splitClose" type="button" aria-label="Close split search"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="split-grid" id="splitGrid"></div>
+  </div>
+</div>
 
 <script>
 const ENGINE_DATA = {
@@ -1412,9 +1502,11 @@ const OPERATOR_STORAGE_KEY = 'searchhub_query_operators_v1';
 const SITE_OPERATOR_CATEGORIES = new Set(['Web Search']);
 const FILETYPE_OPERATOR_CATEGORIES = new Set(['Academic', 'Reference', 'Code & Dev', 'Learning', 'Legal & Gov', 'Science', 'Downloads']);
 const DATE_OPERATOR_CATEGORIES = new Set(['News']);
+const SPLIT_ENGINE_LIMIT = 4;
 let queryHistory = [];
 let engineQueryHistory = {};
 let operatorState = { site: '', filetype: '', after: '', before: '' };
+let splitViewEnabled = false;
 let historyScope = { engineId: null };
 
 function normalizeHistoryEntries(value, limit) {
@@ -1476,6 +1568,12 @@ function buildEngineQuery(query, category, values = {}) {
   add('after', normalizeOperatorValue(values.after, 'after'), DATE_OPERATOR_CATEGORIES.has(category));
   add('before', normalizeOperatorValue(values.before, 'before'), DATE_OPERATOR_CATEGORIES.has(category));
   return additions.length ? additions.join(' ') + ' ' + base : base;
+}
+
+function limitSplitTargets(targets, limit) {
+  const requested = Number.parseInt(limit, 10);
+  const count = Number.isFinite(requested) ? Math.min(Math.max(requested, 1), SPLIT_ENGINE_LIMIT) : SPLIT_ENGINE_LIMIT;
+  return Array.isArray(targets) ? targets.slice(0, count) : [];
 }
 
 function getFavicon(url) {
@@ -1848,6 +1946,74 @@ function clearOperators() {
   showToast('Query operators cleared');
 }
 
+function setSplitViewEnabled(enabled) {
+  splitViewEnabled = Boolean(enabled);
+  const toggle = document.getElementById('splitToggle');
+  const countWrap = document.getElementById('splitCountWrap');
+  toggle.setAttribute('aria-pressed', String(splitViewEnabled));
+  countWrap.hidden = !splitViewEnabled;
+}
+
+function toggleSplitView() {
+  setSplitViewEnabled(!splitViewEnabled);
+}
+
+function openTargetInTab(url) {
+  const opened = window.open(url, '_blank');
+  if (!opened) showToast('Popup blocked \u2014 allow popups for this site.');
+}
+
+function openSplitView(targets) {
+  const overlay = document.getElementById('splitOverlay');
+  const grid = document.getElementById('splitGrid');
+  const status = document.getElementById('splitStatus');
+  const visibleTargets = limitSplitTargets(targets, document.getElementById('splitCount').value);
+  const omitted = targets.length - visibleTargets.length;
+  grid.innerHTML = '';
+  status.textContent = visibleTargets.length + ' engine' + (visibleTargets.length === 1 ? '' : 's') + ' shown' + (omitted > 0 ? ' \u2022 ' + omitted + ' more available in tab mode' : '');
+
+  visibleTargets.forEach(target => {
+    const tile = document.createElement('section');
+    tile.className = 'split-tile';
+    const header = document.createElement('div');
+    header.className = 'split-tile-header';
+    const name = document.createElement('span');
+    name.className = 'split-tile-name';
+    name.textContent = target.name;
+    const openButton = document.createElement('button');
+    openButton.type = 'button';
+    openButton.className = 'split-tile-open';
+    openButton.textContent = 'Open in tab';
+    openButton.addEventListener('click', () => openTargetInTab(target.url));
+    header.append(name, openButton);
+
+    const frameWrap = document.createElement('div');
+    frameWrap.className = 'split-tile-frame';
+    const frame = document.createElement('iframe');
+    frame.title = target.name + ' results';
+    frame.loading = 'lazy';
+    frame.referrerPolicy = 'no-referrer';
+    frame.src = target.url;
+    frameWrap.appendChild(frame);
+
+    const note = document.createElement('div');
+    note.className = 'split-tile-note';
+    note.textContent = 'Some sites block embedding; use Open in tab if blank.';
+    tile.append(header, frameWrap, note);
+    grid.appendChild(tile);
+  });
+
+  overlay.hidden = false;
+  document.body.classList.add('split-open');
+}
+
+function closeSplitView() {
+  const overlay = document.getElementById('splitOverlay');
+  document.getElementById('splitGrid').innerHTML = '';
+  overlay.hidden = true;
+  document.body.classList.remove('split-open');
+}
+
 // Search — deduplicates URLs so the same page never opens twice
 function doSearch() {
   const query = document.getElementById('searchInput').value.trim();
@@ -1855,17 +2021,22 @@ function doSearch() {
   if (checkedEngines.size === 0) { showToast('Select at least one engine'); return; }
 
   const seen = new Set();
-  const urls = [];
+  const targets = [];
   checkedEngines.forEach(id => {
     const eng = getEngineByID(id);
     if (!eng) return;
     const engineQuery = buildEngineQuery(query, getCategoryForID(id), getOperatorValues());
     const full = eng.url + encodeURIComponent(engineQuery);
-    if (!seen.has(full)) { seen.add(full); urls.push(full); }
+    if (!seen.has(full)) { seen.add(full); targets.push({ name: eng.name, url: full }); }
   });
 
+  const urls = targets.map(target => target.url);
   if (urls.length === 0) return;
   recordQueryHistory(query, [...checkedEngines]);
+  if (splitViewEnabled) {
+    openSplitView(targets);
+    return;
+  }
   let launched = 0, blocked = 0;
 
   const first = window.open(urls[0], '_blank');
@@ -1943,12 +2114,17 @@ document.getElementById('historyToggle').addEventListener('click', toggleQueryHi
 document.getElementById('clearHistoryBtn').addEventListener('click', clearQueryHistory);
 document.getElementById('operatorToggle').addEventListener('click', toggleOperatorPanel);
 document.getElementById('clearOperatorsBtn').addEventListener('click', clearOperators);
+document.getElementById('splitToggle').addEventListener('click', toggleSplitView);
+document.getElementById('splitClose').addEventListener('click', closeSplitView);
 ['operatorSite', 'operatorFiletype', 'operatorAfter', 'operatorBefore'].forEach(id => {
   document.getElementById(id).addEventListener('input', saveOperatorState);
   document.getElementById(id).addEventListener('change', saveOperatorState);
 });
 document.addEventListener('click', event => {
   if (!event.target.closest('.search-area') && !event.target.closest('.engine-history-btn')) setHistoryMenuOpen(false);
+});
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && !document.getElementById('splitOverlay').hidden) closeSplitView();
 });
 </script>
 </body>
