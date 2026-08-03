@@ -60,6 +60,7 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 | Chrome Omnibox | Optional Manifest V3 provider maps `sh tornado` to the default Google/Bing/DuckDuckGo bundle |
 | Bookmarklet | Draggable link seeds SearchHub from selected text on any page |
 | OpenSearch | Linked descriptor registers SearchHub as a browser search provider |
+| Domain Dedupe | Optional canonical-root dedupe avoids opening equivalent subdomain targets twice |
 | Engine Editor | Add, remove, reorder, and reset engines through a localStorage overlay |
 | JSON Engine Sharing | Export the active catalog or import a validated catalog into matching categories |
 | Engine Health | Opt-in HEAD checks with healthy, warning, dead, unknown, and repeated-failure deprecation states |
@@ -139,6 +140,8 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 **Density:** Use **Density** to switch between Comfy spacing for scanning and Compact spacing for fitting more engine cards on screen.
 
 **Share snapshots:** Enter a query, select engines, and choose **Share**. The generated URL uses `q` for the query and compact engine tokens in `e`; opening it restores the query and selection.
+
+**Domain dedupe:** Enable **Domain dedupe** when you want one launch per canonical root domain, including `www` and common multi-part suffix normalization. Exact URL dedupe remains the default.
 
 **Engine editor:** Open **Manage** to customize a category. Additions, removals, and ordering changes stay local to this browser; **Reset category** restores the bundled defaults.
 

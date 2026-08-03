@@ -27,6 +27,7 @@ All notable changes to SearchHub will be documented in this file.
 - Added: Optional Manifest V3 Chrome omnibox provider for `sh` keyword searches.
 - Added: Deployment-aware draggable bookmarklet that seeds searches from selected page text.
 - Added: Linked OpenSearch descriptor for browser search-provider registration.
+- Added: Optional canonical-root domain dedupe mode for equivalent subdomain targets.
 - Added: Animated opening-progress bubble showing `Opening n/total` and popup-block counts.
 
 ## [v0.1.1] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
