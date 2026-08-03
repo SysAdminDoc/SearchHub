@@ -350,6 +350,9 @@
   .editor-category-label { display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; }
   .editor-category { min-width: 190px; padding: 7px 9px; color: var(--text-primary); background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; font: inherit; font-size: 12px; outline: none; }
   .editor-count { color: var(--text-muted); font-size: 11px; }
+  .editor-toolbar-actions { display: flex; gap: 6px; }
+  .editor-transfer { padding: 6px 9px; color: var(--text-secondary); background: transparent; border: 1px solid var(--border); border-radius: 6px; font: inherit; font-size: 11px; cursor: pointer; }
+  .editor-transfer:hover { color: var(--text-primary); background: var(--bg-card-hover); }
   .editor-engine-list { display: grid; gap: 6px; max-height: 360px; overflow: auto; padding-right: 2px; }
   .editor-engine-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--bg-card); border: 1px solid transparent; border-radius: 7px; }
   .editor-engine-row:hover { border-color: var(--border); }
@@ -943,7 +946,12 @@
     <div class="editor-body">
       <div class="editor-toolbar">
         <label class="editor-category-label">Category <select class="editor-category" id="editorCategory"></select></label>
-        <span class="editor-count" id="editorCount"></span>
+        <div class="editor-toolbar-actions">
+          <span class="editor-count" id="editorCount"></span>
+          <button class="editor-transfer" id="exportEnginesBtn" type="button">Export JSON</button>
+          <button class="editor-transfer" id="importEnginesBtn" type="button">Import JSON</button>
+          <input id="engineImportInput" type="file" accept="application/json,.json" hidden>
+        </div>
       </div>
       <div class="editor-engine-list" id="editorEngineList"></div>
       <form class="editor-add-form" id="editorAddForm">
@@ -2067,6 +2075,35 @@ function normalizeCustomEngine(value) {
   return { name, url, desc };
 }
 
+const ENGINE_EXPORT_SCHEMA_VERSION = 1;
+const MAX_IMPORTED_ENGINES = 2000;
+
+function buildEngineExportPayload(data) {
+  const categories = {};
+  Object.keys(data).forEach(category => {
+    categories[category] = data[category].engines.map(engine => ({ ...engine }));
+  });
+  return { schemaVersion: ENGINE_EXPORT_SCHEMA_VERSION, categories };
+}
+
+function normalizeEngineExport(value) {
+  if (!value || typeof value !== 'object' || value.schemaVersion !== ENGINE_EXPORT_SCHEMA_VERSION || !value.categories || typeof value.categories !== 'object') return null;
+  const categories = {};
+  let count = 0;
+  Object.keys(value.categories).forEach(category => {
+    if (count >= MAX_IMPORTED_ENGINES || !Array.isArray(value.categories[category])) return;
+    const seen = new Set();
+    const engines = value.categories[category].map(normalizeCustomEngine).filter(Boolean).filter(engine => {
+      if (count >= MAX_IMPORTED_ENGINES || seen.has(engine.url)) return false;
+      seen.add(engine.url);
+      count++;
+      return true;
+    });
+    if (engines.length) categories[category] = engines;
+  });
+  return { schemaVersion: ENGINE_EXPORT_SCHEMA_VERSION, categories };
+}
+
 function normalizeEngineOverlay(value) {
   const overlay = emptyEngineOverlay();
   if (!value || typeof value !== 'object' || value.version !== 1) return overlay;
@@ -2292,6 +2329,44 @@ function resetEditorCategory() {
   refreshEngineUI(selectedKeys);
   renderEditorEngineList();
   showToast(category + ' reset to defaults');
+}
+
+function exportEnginesJSON() {
+  const blob = new Blob([JSON.stringify(buildEngineExportPayload(ENGINE_DATA), null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'searchhub-engines.json';
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+  showToast('Engine catalog exported');
+}
+
+function importEngineData(text) {
+  let payload;
+  try { payload = normalizeEngineExport(JSON.parse(text)); } catch { payload = null; }
+  if (!payload) { showToast('Invalid SearchHub engine JSON'); return; }
+  const selectedKeys = captureSelectedEngineKeys();
+  let added = 0;
+  let skipped = 0;
+  Object.keys(payload.categories).forEach(category => {
+    const engines = ENGINE_DATA[category]?.engines;
+    if (!engines) { skipped += payload.categories[category].length; return; }
+    payload.categories[category].forEach(engine => {
+      if (engines.some(existing => existing.url === engine.url)) { skipped++; return; }
+      engines.push({ ...engine });
+      added++;
+    });
+    syncEngineOverlayCategory(category);
+  });
+  if (!added) { showToast(skipped ? 'No new engines to import' : 'No importable engines found'); return; }
+  persistEngineOverlay();
+  const currentCategory = getEditorCategory();
+  refreshEngineUI(selectedKeys);
+  populateEditorCategories();
+  if (currentCategory && ENGINE_DATA[currentCategory]) document.getElementById('editorCategory').value = currentCategory;
+  renderEditorEngineList();
+  showToast('Imported ' + added + ' engine' + (added === 1 ? '' : 's') + (skipped ? ' \u2022 ' + skipped + ' skipped' : ''));
 }
 
 function openEngineEditor() {
@@ -2593,6 +2668,14 @@ document.getElementById('engineEditorClose').addEventListener('click', closeEngi
 document.getElementById('editorCategory').addEventListener('change', renderEditorEngineList);
 document.getElementById('editorAddForm').addEventListener('submit', addEditorEngine);
 document.getElementById('editorResetCategory').addEventListener('click', resetEditorCategory);
+document.getElementById('exportEnginesBtn').addEventListener('click', exportEnginesJSON);
+document.getElementById('importEnginesBtn').addEventListener('click', () => document.getElementById('engineImportInput').click());
+document.getElementById('engineImportInput').addEventListener('change', event => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  file.text().then(importEngineData).catch(() => showToast('Could not read engine JSON'));
+  event.target.value = '';
+});
 ['operatorSite', 'operatorFiletype', 'operatorAfter', 'operatorBefore'].forEach(id => {
   document.getElementById(id).addEventListener('input', saveOperatorState);
   document.getElementById(id).addEventListener('change', saveOperatorState);

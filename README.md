@@ -51,6 +51,7 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 | Focused Tab | Optionally reuse the most recently opened tab for the next search |
 | Keyboard Shortcuts | `/` focuses search, `1–9`/`0` switch category tabs, `Ctrl+Enter` searches |
 | Engine Editor | Add, remove, reorder, and reset engines through a localStorage overlay |
+| JSON Engine Sharing | Export the active catalog or import a validated catalog into matching categories |
 | State Validation | Stale/broken saved state is silently discarded on load |
 | Dark Theme | Deep purple accent glassmorphism UI — no light mode |
 | Responsive | Adapts to mobile with 2-column grid and compact tabs |
@@ -115,6 +116,8 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 **Keyboard shortcuts:** Press `/` from anywhere outside an input to focus search, `1`–`9` or `0` to switch the first ten category tabs, and `Ctrl+Enter` to launch the current search from any control.
 
 **Engine editor:** Open **Manage** to customize a category. Additions, removals, and ordering changes stay local to this browser; **Reset category** restores the bundled defaults.
+
+**Engine sharing:** Use **Export JSON** in the editor to save the active catalog, then **Import JSON** on another SearchHub copy. Imports are version-checked, deduplicated, and limited to existing categories.
 
 ## Hosting
 
