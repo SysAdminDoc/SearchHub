@@ -25,6 +25,7 @@ All notable changes to SearchHub will be documented in this file.
 - Added: Shareable query snapshots encoded as `q` and compact engine-token `e` URL parameters.
 - Added: Installable PWA manifest and origin-scoped offline service worker for static HTTP(S) hosts.
 - Added: Optional Manifest V3 Chrome omnibox provider for `sh` keyword searches.
+- Added: Deployment-aware draggable bookmarklet that seeds searches from selected page text.
 - Added: Animated opening-progress bubble showing `Opening n/total` and popup-block counts.
 
 ## [v0.1.1] - %Y->- (HEAD -> main, origin/main, origin/HEAD)

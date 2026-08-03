@@ -373,6 +373,9 @@
   .share-copy { flex-shrink: 0; padding: 8px 11px; color: #fff; background: var(--accent); border: 0; border-radius: 6px; font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
   .share-copy:hover { background: var(--accent-hover); }
   .share-help { margin: 8px 0 0; color: var(--text-muted); font-size: 10px; }
+  .bookmarklet-link { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; color: var(--text-muted); border: 1px solid transparent; border-radius: 6px; font-size: 11px; text-decoration: none; transition: all 0.15s ease; }
+  .bookmarklet-link:hover { color: var(--text-primary); background: var(--bg-card); border-color: var(--border); }
+  .bookmarklet-link::before { content: '\1F517'; font-size: 12px; }
 
   .operator-toggle {
     display: inline-flex;
@@ -1155,6 +1158,7 @@
           <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
           <span>Share</span>
         </button>
+        <a class="bookmarklet-link" id="bookmarkletLink" href="#" draggable="true" title="Drag this link to your bookmarks bar">Bookmarklet</a>
         <button class="operator-toggle" id="operatorToggle" type="button" aria-expanded="false" aria-controls="operatorPanel">
           <svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
           <span>Operators</span>
@@ -2265,6 +2269,15 @@ function buildShareURL(query, ids, data, baseHref) {
   return base.href;
 }
 
+function buildBookmarkletURL(baseHref) {
+  const base = new URL(baseHref);
+  base.search = '';
+  base.hash = '';
+  const serializedBase = JSON.stringify(base.href);
+  const code = `(function(){const q=(window.getSelection?window.getSelection().toString():'').trim()||document.title||location.href;const u=new URL(${serializedBase});u.search='?q='+encodeURIComponent(q.slice(0,500))+'&e=google,bing,ddg';window.open(u.href,'_blank','noopener');})();`;
+  return 'javascript:' + code;
+}
+
 function normalizeHistoryEntries(value, limit) {
   if (!Array.isArray(value)) return [];
   const entries = [];
@@ -3272,6 +3285,10 @@ function loadDensity() {
   applyDensity(density);
 }
 
+function loadBookmarklet() {
+  if (typeof location !== 'undefined') document.getElementById('bookmarkletLink').href = buildBookmarkletURL(location.href);
+}
+
 function registerServiceWorker() {
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
@@ -3621,6 +3638,7 @@ function updateTabArrows() {
 // DOM bootstrap
 loadTheme();
 loadDensity();
+loadBookmarklet();
 registerServiceWorker();
 loadEngineOverlay();
 buildUI();
