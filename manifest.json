@@ -3,7 +3,7 @@
   "name": "SearchHub Omnibox",
   "version": "0.1.1",
   "description": "Launch SearchHub searches from Chrome's omnibox with the sh keyword.",
-  "permissions": ["tabs"],
+  "permissions": ["tabs", "bookmarks"],
   "background": {
     "service_worker": "background.js"
   },

@@ -29,6 +29,7 @@ All notable changes to SearchHub will be documented in this file.
 - Added: Linked OpenSearch descriptor for browser search-provider registration.
 - Added: Optional canonical-root domain dedupe mode for equivalent subdomain targets.
 - Added: Query-aware Smart Default selection for specialized and general searches.
+- Added: Chrome-extension bookmark-folder export for the latest search session.
 - Added: Animated opening-progress bubble showing `Opening n/total` and popup-block counts.
 
 ## [v0.1.1] - %Y->- (HEAD -> main, origin/main, origin/HEAD)

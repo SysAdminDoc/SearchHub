@@ -380,6 +380,9 @@
   .smart-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; color: var(--text-muted); background: transparent; border: 1px solid transparent; border-radius: 6px; font: inherit; cursor: pointer; transition: all 0.15s ease; }
   .smart-toggle:hover { color: var(--text-primary); background: var(--bg-card); border-color: var(--border); }
   .smart-toggle svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .session-export-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; color: var(--text-muted); background: transparent; border: 1px solid transparent; border-radius: 6px; font: inherit; cursor: pointer; transition: all 0.15s ease; }
+  .session-export-toggle:hover { color: var(--text-primary); background: var(--bg-card); border-color: var(--border); }
+  .session-export-toggle svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .bookmarklet-link { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; color: var(--text-muted); border: 1px solid transparent; border-radius: 6px; font-size: 11px; text-decoration: none; transition: all 0.15s ease; }
   .bookmarklet-link:hover { color: var(--text-primary); background: var(--bg-card); border-color: var(--border); }
   .bookmarklet-link::before { content: '\1F517'; font-size: 12px; }
@@ -1168,6 +1171,10 @@
         <button class="smart-toggle" id="smartToggle" type="button" title="Choose engines from the query context">
           <svg viewBox="0 0 24 24"><path d="m12 3 1.3 5.7L19 10l-5.7 1.3L12 17l-1.3-5.7L5 10l5.7-1.3L12 3z"/><path d="m19 16 .6 2.4L22 19l-2.4.6L19 22l-.6-2.4L16 19l2.4-.6L19 16z"/></svg>
           <span>Smart default</span>
+        </button>
+        <button class="session-export-toggle" id="sessionExportToggle" type="button" title="Export the latest search session to a bookmark folder">
+          <svg viewBox="0 0 24 24"><path d="M5 4h14v17l-7-4-7 4V4z"/><path d="M8 8h8M8 11h8"/></svg>
+          <span>Bookmarks</span>
         </button>
         <a class="bookmarklet-link" id="bookmarkletLink" href="#" draggable="true" title="Drag this link to your bookmarks bar">Bookmarklet</a>
         <button class="operator-toggle" id="operatorToggle" type="button" aria-expanded="false" aria-controls="operatorPanel">
@@ -2190,6 +2197,7 @@ const KEYBOARD_NAV_STORAGE_KEY = 'searchhub_keyboard_nav_v1';
 const THEME_STORAGE_KEY = 'searchhub_theme_v1';
 const DENSITY_STORAGE_KEY = 'searchhub_density_v1';
 const DOMAIN_DEDUPE_STORAGE_KEY = 'searchhub_domain_dedupe_v1';
+const SEARCH_SESSION_STORAGE_KEY = 'searchhub_search_session_v1';
 let queryHistory = [];
 let engineQueryHistory = {};
 let engineHealthState = {};
@@ -2201,6 +2209,7 @@ let historyScope = { engineId: null };
 let keyboardNavigationEnabled = false;
 let selectedChipFocusIndex = 0;
 let domainDedupeEnabled = false;
+let searchSession = { query: '', targets: [] };
 
 const SHARE_ENGINE_ALIASES = { duckduckgo: 'ddg' };
 
@@ -2252,6 +2261,27 @@ function getSmartDefaultEngineIDs(query, data, operators = {}) {
     targets = [['Web Search', 'Google'], ['Web Search', 'Bing'], ['Web Search', 'DuckDuckGo']];
   }
   return resolveEngineTargets(data, targets);
+}
+
+function normalizeSearchSessionTargets(value) {
+  if (!Array.isArray(value)) return [];
+  return value.map(target => {
+    const name = typeof target?.name === 'string' ? target.name.trim().slice(0, 120) : '';
+    const url = typeof target?.url === 'string' ? target.url.trim().slice(0, 2000) : '';
+    return name && /^https?:\/\//i.test(url) ? { name, url } : null;
+  }).filter(Boolean).slice(0, 100);
+}
+
+function normalizeSearchSession(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return { query: '', targets: [] };
+  return {
+    query: typeof value.query === 'string' ? value.query.trim().slice(0, MAX_QUERY_LENGTH) : '',
+    targets: normalizeSearchSessionTargets(value.targets)
+  };
+}
+
+function isChromeExtensionContext() {
+  return typeof chrome !== 'undefined' && chrome.runtime && typeof chrome.runtime.id === 'string' && Boolean(chrome.runtime.id);
 }
 
 function getShareEngineBaseToken(name) {
@@ -3644,6 +3674,7 @@ function doSearch() {
   const urls = targets.map(target => target.url);
   if (urls.length === 0) return;
   recordQueryHistory(query, [...checkedEngines]);
+  recordSearchSession(query, targets);
   if (splitViewEnabled) {
     openSplitView(targets);
     return;
@@ -3715,6 +3746,27 @@ function loadSharedState() {
   saveState();
 }
 
+function recordSearchSession(query, targets) {
+  searchSession = normalizeSearchSession({ query, targets });
+  try { localStorage.setItem(SEARCH_SESSION_STORAGE_KEY, JSON.stringify(searchSession)); } catch {}
+}
+
+function loadSearchSession() {
+  try { searchSession = normalizeSearchSession(JSON.parse(localStorage.getItem(SEARCH_SESSION_STORAGE_KEY))); } catch { searchSession = { query: '', targets: [] }; }
+}
+
+function exportSearchSession() {
+  if (!isChromeExtensionContext()) { showToast('Bookmark export is available in the Chrome extension'); return; }
+  if (!searchSession.targets.length) { showToast('Run a search before exporting bookmarks'); return; }
+  try {
+    chrome.runtime.sendMessage({ type: 'export_session', query: searchSession.query, targets: searchSession.targets }, response => {
+      const runtimeError = chrome.runtime.lastError;
+      if (runtimeError || !response?.ok) { showToast(response?.error || 'Bookmark export failed'); return; }
+      showToast('Search session exported to bookmarks');
+    });
+  } catch { showToast('Bookmark export failed'); }
+}
+
 function scrollTabs(dir) {
   const tabs = document.getElementById('tabs');
   tabs.scrollBy({ left: dir * 260, behavior: 'smooth' });
@@ -3741,6 +3793,7 @@ buildUI();
 updatePresetCounts();
 loadState();
 loadSharedState();
+loadSearchSession();
 loadKeyboardNavigationState();
 loadQueryHistory();
 loadOperatorState();
@@ -3760,6 +3813,7 @@ document.getElementById('shareToggle').addEventListener('click', openShareMenu);
 document.getElementById('shareClose').addEventListener('click', closeShareMenu);
 document.getElementById('shareCopy').addEventListener('click', copyShareURL);
 document.getElementById('smartToggle').addEventListener('click', applySmartDefaults);
+document.getElementById('sessionExportToggle').addEventListener('click', exportSearchSession);
 document.getElementById('clearHistoryBtn').addEventListener('click', clearQueryHistory);
 document.getElementById('operatorToggle').addEventListener('click', toggleOperatorPanel);
 document.getElementById('clearOperatorsBtn').addEventListener('click', clearOperators);

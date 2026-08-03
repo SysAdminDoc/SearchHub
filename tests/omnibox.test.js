@@ -6,7 +6,7 @@ const manifest = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
 assert.equal(manifest.manifest_version, 3);
 assert.equal(manifest.background.service_worker, 'background.js');
 assert.equal(manifest.omnibox.keyword, 'sh');
-assert.deepEqual(manifest.permissions, ['tabs']);
+assert.deepEqual(manifest.permissions, ['tabs', 'bookmarks']);
 
 const background = fs.readFileSync('background.js', 'utf8');
 assert.match(background, /SEARCHHUB_DEFAULT_ENGINES = 'google,bing,ddg'/);
