@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dracula">
+<html lang="en" data-theme="dracula" data-density="comfy">
 <head>
     <meta name="description" content="Search 552 engines across 31 categories from a single page">
     <meta property="og:image" content="https://raw.githubusercontent.com/SysAdminDoc/SearchHub/main/banner.png">
@@ -40,6 +40,11 @@
     --fade-bg: rgba(10, 10, 15, 0.95);
     --scrollbar-thumb: #2a2a3a;
     --theme-color: #1e1e2e;
+    --density-grid-gap: 8px;
+    --density-engine-padding: 10px 12px;
+    --density-panel-padding: 20px 0 40px;
+    --density-tab-padding: 8px 16px;
+    --density-chip-padding: 5px 8px 5px 10px;
   }
 
   :root[data-theme="light"] {
@@ -160,6 +165,14 @@
     --fade-bg: rgba(46, 52, 64, 0.98);
     --scrollbar-thumb: #4c566a;
     --theme-color: #2e3440;
+  }
+
+  :root[data-density="compact"] {
+    --density-grid-gap: 5px;
+    --density-engine-padding: 7px 9px;
+    --density-panel-padding: 14px 0 28px;
+    --density-tab-padding: 6px 11px;
+    --density-chip-padding: 4px 6px 4px 8px;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -341,6 +354,10 @@
   .theme-picker svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .theme-select { padding: 4px 6px; color: var(--text-secondary); background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; font: inherit; font-size: 11px; outline: none; cursor: pointer; }
   .theme-select:focus { border-color: var(--border-focus); }
+  .density-picker { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); font: inherit; }
+  .density-picker svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .density-select { padding: 4px 6px; color: var(--text-secondary); background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; font: inherit; font-size: 11px; outline: none; cursor: pointer; }
+  .density-select:focus { border-color: var(--border-focus); }
 
   .operator-toggle {
     display: inline-flex;
@@ -716,7 +733,7 @@
   .tabs-fade.visible { opacity: 1; }
 
   .tab {
-    padding: 8px 16px;
+    padding: var(--density-tab-padding);
     font-size: 12.5px;
     font-weight: 500;
     color: var(--text-muted);
@@ -786,7 +803,7 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 5px 8px 5px 10px;
+    padding: var(--density-chip-padding);
     background: var(--bg-card);
     border: 1px solid var(--accent-border);
     border-radius: 7px;
@@ -825,7 +842,7 @@
   @keyframes chipIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 
   /* Panels */
-  .panel { display: none; padding: 20px 0 40px; animation: fadeIn 0.3s ease-out; }
+  .panel { display: none; padding: var(--density-panel-padding); animation: fadeIn 0.3s ease-out; }
   .panel.active { display: block; }
 
   .panel-header {
@@ -834,7 +851,7 @@
     justify-content: space-between;
     margin-bottom: 12px;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: var(--density-grid-gap);
   }
 
   .panel-title {
@@ -888,7 +905,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 12px;
+    padding: var(--density-engine-padding);
     background: var(--bg-card);
     border: 1px solid transparent;
     border-radius: var(--radius);
@@ -1148,6 +1165,14 @@
             <option value="oled">OLED</option>
             <option value="dracula">Dracula</option>
             <option value="nord">Nord</option>
+          </select>
+        </label>
+        <label class="density-picker" title="Choose layout density">
+          <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="10" cy="18" r="1.5"/></svg>
+          <span>Density</span>
+          <select class="density-select" id="densitySelect" aria-label="Layout density">
+            <option value="comfy">Comfy</option>
+            <option value="compact">Compact</option>
           </select>
         </label>
         <button class="engine-editor-toggle" id="engineEditorToggle" type="button">
@@ -2001,6 +2026,12 @@ function normalizeTheme(value) {
   return typeof value === 'string' && THEME_OPTIONS.includes(value) ? value : 'dracula';
 }
 
+const DENSITY_OPTIONS = ['comfy', 'compact'];
+
+function normalizeDensity(value) {
+  return typeof value === 'string' && DENSITY_OPTIONS.includes(value) ? value : 'comfy';
+}
+
 const ENGINE_PRESETS = {
   privacy: {
     label: 'Privacy stack',
@@ -2114,6 +2145,7 @@ const SPLIT_ENGINE_LIMIT = 4;
 const FOCUSED_TAB_STORAGE_KEY = 'searchhub_focused_tab_v1';
 const KEYBOARD_NAV_STORAGE_KEY = 'searchhub_keyboard_nav_v1';
 const THEME_STORAGE_KEY = 'searchhub_theme_v1';
+const DENSITY_STORAGE_KEY = 'searchhub_density_v1';
 let queryHistory = [];
 let engineQueryHistory = {};
 let engineHealthState = {};
@@ -3118,6 +3150,20 @@ function loadTheme() {
   applyTheme(theme);
 }
 
+function applyDensity(value) {
+  const density = normalizeDensity(value);
+  document.documentElement.dataset.density = density;
+  const select = document.getElementById('densitySelect');
+  if (select) select.value = density;
+  try { localStorage.setItem(DENSITY_STORAGE_KEY, density); } catch {}
+}
+
+function loadDensity() {
+  let density = 'comfy';
+  try { density = normalizeDensity(localStorage.getItem(DENSITY_STORAGE_KEY)); } catch {}
+  applyDensity(density);
+}
+
 function getOperatorValues() {
   return {
     site: normalizeOperatorValue(document.getElementById('operatorSite').value, 'site'),
@@ -3416,6 +3462,7 @@ function updateTabArrows() {
 
 // DOM bootstrap
 loadTheme();
+loadDensity();
 loadEngineOverlay();
 buildUI();
 updatePresetCounts();
@@ -3445,6 +3492,7 @@ document.getElementById('presetToggle').addEventListener('click', togglePresetMe
 document.querySelectorAll('.preset-item').forEach(button => button.addEventListener('click', () => applyEnginePreset(button.dataset.preset)));
 document.getElementById('keyboardNavToggle').addEventListener('click', toggleKeyboardNavigation);
 document.getElementById('themeSelect').addEventListener('change', event => applyTheme(event.target.value));
+document.getElementById('densitySelect').addEventListener('change', event => applyDensity(event.target.value));
 document.getElementById('engineEditorToggle').addEventListener('click', openEngineEditor);
 document.getElementById('engineEditorClose').addEventListener('click', closeEngineEditor);
 document.getElementById('editorCategory').addEventListener('change', renderEditorEngineList);
