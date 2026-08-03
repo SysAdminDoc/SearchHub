@@ -43,6 +43,7 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 | Tab Scroll Arrows | Left/right arrows with edge fades for navigating all 31 categories |
 | Tab Selection Badges | Dot indicators on category tabs that contain selected engines |
 | Staggered Tab Opening | 150ms delay between tabs to bypass popup blockers |
+| Opening Progress | Live `Opening n/total` bubble with launched and blocked counts |
 | Popup Block Detection | Toast notification when tabs are blocked, with guidance |
 | Persistent Selections | localStorage saves your engine picks across sessions |
 | Query History | Last 50 searches plus per-engine recent query lists, stored locally |
@@ -110,6 +111,8 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 **Finding engines:** Use the filter box in any category panel to search by name (e.g., type "duck" to find DuckDuckGo).
 
 **Popup blockers:** The first tab always opens (browser considers it user-initiated). Remaining tabs stagger at 150ms intervals. If your browser blocks them, allow popups for the page — you'll see a toast notification with guidance.
+
+**Opening progress:** Normal multi-tab searches show a live progress bubble while tabs are staggered, then summarize the launched and blocked totals.
 
 **Persistence:** Your selections save to `localStorage` automatically. Clearing browser data resets them.
 

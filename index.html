@@ -1038,6 +1038,33 @@
 
   .toast.show { transform: translateX(-50%) translateY(0); }
 
+  .opening-progress {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 1001;
+    width: min(300px, calc(100vw - 48px));
+    padding: 13px 15px;
+    color: var(--text-primary);
+    background: var(--surface-glass);
+    border: 1px solid var(--accent-border);
+    border-radius: 11px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(14px);
+    pointer-events: none;
+    transform: translateY(12px) scale(0.97);
+    opacity: 0;
+    transition: transform 0.22s ease, opacity 0.22s ease;
+  }
+
+  .opening-progress:not([hidden]) { transform: translateY(0) scale(1); opacity: 1; }
+  .opening-progress[hidden] { display: none; }
+  .opening-progress-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 12px; font-weight: 600; }
+  .opening-progress-count { color: var(--accent); font-variant-numeric: tabular-nums; }
+  .opening-progress-track { height: 5px; margin-top: 10px; overflow: hidden; background: var(--bg-input); border-radius: 99px; }
+  .opening-progress-fill { width: 0; height: 100%; background: var(--accent); border-radius: inherit; transition: width 0.2s ease; }
+  .opening-progress-detail { overflow: hidden; margin-top: 7px; color: var(--text-muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+
   .no-results {
     text-align: center;
     padding: 32px 16px;
@@ -1210,6 +1237,12 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<div class="opening-progress" id="openingProgress" role="status" aria-live="polite" hidden>
+  <div class="opening-progress-header"><span id="openingProgressTitle">Opening searches</span><span class="opening-progress-count" id="openingProgressCount">Opening 0/0</span></div>
+  <div class="opening-progress-track" aria-hidden="true"><div class="opening-progress-fill" id="openingProgressFill"></div></div>
+  <div class="opening-progress-detail" id="openingProgressDetail"></div>
+</div>
 
 <div class="split-overlay" id="splitOverlay" hidden>
   <div class="split-dialog" role="dialog" aria-modal="false" aria-labelledby="splitTitle">
@@ -2213,6 +2246,20 @@ function getSelectedChipNavigationIndex(index, key, count) {
   if (key === 'ArrowRight' || key === 'ArrowDown') return (current + 1) % total;
   if (key === 'ArrowLeft' || key === 'ArrowUp') return (current - 1 + total) % total;
   return current;
+}
+
+function getOpeningProgressState(completed, total, launched, blocked) {
+  const totalCount = Math.max(Number.parseInt(total, 10) || 0, 0);
+  const completedCount = Math.min(Math.max(Number.parseInt(completed, 10) || 0, 0), totalCount);
+  const launchedCount = Math.max(Number.parseInt(launched, 10) || 0, 0);
+  const blockedCount = Math.max(Number.parseInt(blocked, 10) || 0, 0);
+  return {
+    completed: completedCount,
+    total: totalCount,
+    launched: launchedCount,
+    blocked: blockedCount,
+    percent: totalCount ? Math.round(completedCount / totalCount * 100) : 0
+  };
 }
 
 function getFavicon(url) {
@@ -3244,6 +3291,35 @@ function sendToFocusedTab(url) {
   return 'blocked';
 }
 
+let openingProgressHideTimer = null;
+
+function updateOpeningProgress(completed, total, launched, blocked, engineName = '') {
+  const panel = document.getElementById('openingProgress');
+  if (!panel) return;
+  const state = getOpeningProgressState(completed, total, launched, blocked);
+  panel.hidden = false;
+  document.getElementById('openingProgressCount').textContent = `Opening ${state.completed}/${state.total}`;
+  document.getElementById('openingProgressFill').style.width = state.percent + '%';
+  const details = [];
+  if (engineName) details.push(engineName);
+  details.push(state.launched + ' launched');
+  if (state.blocked) details.push(state.blocked + ' blocked');
+  document.getElementById('openingProgressDetail').textContent = details.join(' • ');
+}
+
+function startOpeningProgress(total) {
+  clearTimeout(openingProgressHideTimer);
+  document.getElementById('openingProgressTitle').textContent = 'Opening searches';
+  updateOpeningProgress(0, total, 0, 0);
+}
+
+function finishOpeningProgress(total, launched, blocked) {
+  updateOpeningProgress(total, total, launched, blocked);
+  document.getElementById('openingProgressTitle').textContent = 'Opening complete';
+  clearTimeout(openingProgressHideTimer);
+  openingProgressHideTimer = setTimeout(() => { document.getElementById('openingProgress').hidden = true; }, 1800);
+}
+
 // Search — deduplicates URLs so the same page never opens twice
 function doSearch() {
   const query = document.getElementById('searchInput').value.trim();
@@ -3276,16 +3352,20 @@ function doSearch() {
   }
   let launched = 0, blocked = 0;
 
+  startOpeningProgress(urls.length);
   const first = window.open(urls[0], '_blank');
   if (first) { lastOpenedTab = first; launched++; } else blocked++;
+  updateOpeningProgress(1, urls.length, launched, blocked, targets[0]?.name || '');
 
   if (urls.length > 1) {
     urls.slice(1).forEach((url, i) => {
       setTimeout(() => {
         const w = window.open(url, '_blank');
         if (w) { lastOpenedTab = w; launched++; } else blocked++;
+        updateOpeningProgress(i + 2, urls.length, launched, blocked, targets[i + 1]?.name || '');
         if (i === urls.length - 2) {
           setTimeout(() => {
+            finishOpeningProgress(urls.length, launched, blocked);
             if (blocked > 0) showToast(`Opened ${launched} tab${launched!==1?'s':''}. ${blocked} blocked \u2014 allow popups for this site.`);
             else showToast(`Launched ${launched} search${launched!==1?'es':''}`);
           }, 100);
@@ -3293,6 +3373,7 @@ function doSearch() {
       }, (i + 1) * 150);
     });
   } else {
+    finishOpeningProgress(1, launched, blocked);
     showToast(blocked ? 'Popup blocked \u2014 allow popups for this site.' : 'Launched 1 search');
   }
 }
