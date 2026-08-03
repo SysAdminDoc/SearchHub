@@ -377,6 +377,9 @@
   .dedupe-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; color: var(--text-muted); background: transparent; border: 1px solid transparent; border-radius: 6px; font: inherit; cursor: pointer; transition: all 0.15s ease; }
   .dedupe-toggle:hover, .dedupe-toggle[aria-pressed="true"] { color: var(--text-primary); background: var(--bg-card); border-color: var(--border); }
   .dedupe-toggle svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .smart-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; color: var(--text-muted); background: transparent; border: 1px solid transparent; border-radius: 6px; font: inherit; cursor: pointer; transition: all 0.15s ease; }
+  .smart-toggle:hover { color: var(--text-primary); background: var(--bg-card); border-color: var(--border); }
+  .smart-toggle svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .bookmarklet-link { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; color: var(--text-muted); border: 1px solid transparent; border-radius: 6px; font-size: 11px; text-decoration: none; transition: all 0.15s ease; }
   .bookmarklet-link:hover { color: var(--text-primary); background: var(--bg-card); border-color: var(--border); }
   .bookmarklet-link::before { content: '\1F517'; font-size: 12px; }
@@ -1161,6 +1164,10 @@
         <button class="share-toggle" id="shareToggle" type="button" aria-expanded="false" aria-controls="shareMenu" title="Share the current query and selected engines">
           <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
           <span>Share</span>
+        </button>
+        <button class="smart-toggle" id="smartToggle" type="button" title="Choose engines from the query context">
+          <svg viewBox="0 0 24 24"><path d="m12 3 1.3 5.7L19 10l-5.7 1.3L12 17l-1.3-5.7L5 10l5.7-1.3L12 3z"/><path d="m19 16 .6 2.4L22 19l-2.4.6L19 22l-.6-2.4L16 19l2.4-.6L19 16z"/></svg>
+          <span>Smart default</span>
         </button>
         <a class="bookmarklet-link" id="bookmarkletLink" href="#" draggable="true" title="Drag this link to your bookmarks bar">Bookmarklet</a>
         <button class="operator-toggle" id="operatorToggle" type="button" aria-expanded="false" aria-controls="operatorPanel">
@@ -2213,6 +2220,40 @@ function getCanonicalRootDomain(value) {
   } catch { return ''; }
 }
 
+function resolveEngineTargets(data, targets, limit = 5) {
+  const entries = getShareEngineEntries(data);
+  const byKey = new Map(entries.map(entry => [entry.category + '::' + entry.engine.name, entry.id]));
+  const ids = [];
+  const seen = new Set();
+  (Array.isArray(targets) ? targets : []).forEach(([category, name]) => {
+    const id = byKey.get(category + '::' + name);
+    if (id && !seen.has(id) && ids.length < limit) { seen.add(id); ids.push(id); }
+  });
+  return ids;
+}
+
+function getSmartDefaultEngineIDs(query, data, operators = {}) {
+  const operatorText = Object.entries(operators || {}).filter(([, value]) => value).map(([key, value]) => key + ':' + value).join(' ');
+  const source = ((typeof query === 'string' ? query : '') + ' ' + operatorText).toLowerCase();
+  let targets;
+  if (/\bsite:/.test(source)) {
+    targets = [['Web Search', 'Google'], ['Web Search', 'Bing'], ['Web Search', 'DuckDuckGo']];
+  } else if (/\bfiletype:/.test(source)) {
+    targets = [['Academic', 'Google Scholar'], ['Academic', 'Semantic Scholar'], ['Academic', 'CORE'], ['Academic', 'Google Books']];
+  } else if (/\b(?:after|before):\d{4}-\d{2}-\d{2}/.test(source)) {
+    targets = [['News', 'Google News'], ['News', 'Bing News'], ['News', 'Reuters']];
+  } else if (/\b(?:reverse image|image source|image match)\b/.test(source)) {
+    targets = [['Reverse Image', 'Google Lens'], ['Reverse Image', 'TinEye'], ['Reverse Image', 'Yandex Reverse']];
+  } else if (/\b(?:image|photo|photograph|wallpaper|png|jpg|jpeg)\b/.test(source)) {
+    targets = [['Images', 'Google Images'], ['Images', 'Bing Images'], ['Images', 'DuckDuckGo Images']];
+  } else if (/\b(?:cve|ioc|indicator|malware|phishing|sha256|hash|ip address|domain intelligence)\b/.test(source)) {
+    targets = [['OSINT & Threat Intel', 'VirusTotal'], ['OSINT & Threat Intel', 'URLScan'], ['OSINT & Threat Intel', 'Shodan'], ['OSINT & Threat Intel', 'AbuseIPDB'], ['OSINT & Threat Intel', 'urlhaus']];
+  } else {
+    targets = [['Web Search', 'Google'], ['Web Search', 'Bing'], ['Web Search', 'DuckDuckGo']];
+  }
+  return resolveEngineTargets(data, targets);
+}
+
 function getShareEngineBaseToken(name) {
   const normalized = normalizeShareToken(name);
   return SHARE_ENGINE_ALIASES[normalized] || normalized;
@@ -2590,6 +2631,20 @@ function applyEnginePreset(presetKey) {
   const firstCategory = getCategoryForID(ids[0]);
   if (firstCategory) switchTab(firstCategory);
   showToast(preset.label + ' selected ' + ids.length + ' engines');
+}
+
+function applySmartDefaults() {
+  const query = document.getElementById('searchInput').value.trim();
+  const ids = getSmartDefaultEngineIDs(query, ENGINE_DATA, getOperatorValues());
+  if (!ids.length) { showToast('No smart defaults match the active catalog'); return; }
+  const selected = new Set(ids);
+  checkedEngines = selected;
+  document.querySelectorAll('.engine-item').forEach(item => item.classList.toggle('checked', selected.has(item.dataset.id)));
+  updateCount();
+  saveState();
+  const firstCategory = getCategoryForID(ids[0]);
+  if (firstCategory) switchTab(firstCategory);
+  showToast('Smart default selected ' + ids.length + ' engines');
 }
 
 function buildUI() {
@@ -3704,6 +3759,7 @@ document.getElementById('historyToggle').addEventListener('click', toggleQueryHi
 document.getElementById('shareToggle').addEventListener('click', openShareMenu);
 document.getElementById('shareClose').addEventListener('click', closeShareMenu);
 document.getElementById('shareCopy').addEventListener('click', copyShareURL);
+document.getElementById('smartToggle').addEventListener('click', applySmartDefaults);
 document.getElementById('clearHistoryBtn').addEventListener('click', clearQueryHistory);
 document.getElementById('operatorToggle').addEventListener('click', toggleOperatorPanel);
 document.getElementById('clearOperatorsBtn').addEventListener('click', clearOperators);
