@@ -159,6 +159,29 @@
 
   .history-toggle svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
+  .preset-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font: inherit;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .preset-toggle:hover,
+  .preset-toggle[aria-expanded="true"] {
+    color: var(--text-primary);
+    background: var(--bg-card);
+    border-color: var(--border);
+  }
+
+  .preset-toggle svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
   .operator-toggle {
     display: inline-flex;
     align-items: center;
@@ -386,6 +409,31 @@
   }
 
   .query-history-menu[hidden] { display: none; }
+
+  .preset-menu {
+    max-width: 680px;
+    margin: 10px auto 0;
+    padding: 12px;
+    background: rgba(24, 24, 36, 0.96);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 12px 36px rgba(0,0,0,0.35);
+    backdrop-filter: blur(16px);
+  }
+
+  .preset-menu[hidden] { display: none; }
+  .preset-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .preset-title { color: var(--text-secondary); font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+  .preset-note { color: var(--text-muted); font-size: 10px; }
+  .preset-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .preset-item { display: flex; align-items: center; gap: 9px; min-width: 0; padding: 10px; color: var(--text-secondary); background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; font: inherit; text-align: left; cursor: pointer; transition: all 0.15s ease; }
+  .preset-item:hover { color: var(--text-primary); background: var(--bg-card-hover); border-color: var(--accent); }
+  .preset-item-icon { display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; flex-shrink: 0; color: var(--accent); background: var(--accent-subtle); border-radius: 7px; }
+  .preset-item-icon svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .preset-item-copy { min-width: 0; flex: 1; }
+  .preset-item-name { display: block; color: inherit; font-size: 12px; font-weight: 600; }
+  .preset-item-note { display: block; overflow: hidden; margin-top: 2px; color: var(--text-muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+  .preset-item-count { flex-shrink: 0; color: var(--text-muted); font-size: 10px; }
 
   .history-header {
     display: flex;
@@ -893,6 +941,10 @@
           <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><polyline points="8 12 11 15 16 9"/></svg>
           <span>Focused tab</span>
         </button>
+        <button class="preset-toggle" id="presetToggle" type="button" aria-expanded="false" aria-controls="presetMenu">
+          <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="11" cy="17" r="2"/></svg>
+          <span>Presets</span>
+        </button>
         <button class="engine-editor-toggle" id="engineEditorToggle" type="button">
           <svg viewBox="0 0 24 24"><path d="M12 3a2 2 0 0 1 2 2v1.1a7.9 7.9 0 0 1 1.8 1l.9-.5a2 2 0 1 1 2 3.5l-.9.5a8 8 0 0 1 0 2l.9.5a2 2 0 1 1-2 3.5l-.9-.5a7.9 7.9 0 0 1-1.8 1V19a2 2 0 1 1-4 0v-1.1a7.9 7.9 0 0 1-1.8-1l-.9.5a2 2 0 1 1-2-3.5l.9-.5a8 8 0 0 1 0-2l-.9-.5a2 2 0 1 1 2-3.5l.9.5a7.9 7.9 0 0 1 1.8-1V5a2 2 0 0 1 2-2z"/><circle cx="12" cy="12" r="2.5"/></svg>
           <span>Manage</span>
@@ -926,6 +978,34 @@
       </div>
       <div class="history-list" id="historyList"></div>
       <div class="history-empty" id="historyEmpty">No recent searches yet.</div>
+    </div>
+    <div class="preset-menu" id="presetMenu" hidden>
+      <div class="preset-header">
+        <span class="preset-title">Engine stacks</span>
+        <span class="preset-note">Replaces the current selection</span>
+      </div>
+      <div class="preset-list">
+        <button class="preset-item" type="button" data-preset="privacy">
+          <span class="preset-item-icon"><svg viewBox="0 0 24 24"><path d="M12 3 20 6v5c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-3z"/><path d="m9 12 2 2 4-4"/></svg></span>
+          <span class="preset-item-copy"><span class="preset-item-name">Privacy stack</span><span class="preset-item-note">Private, independent, and meta search</span></span>
+          <span class="preset-item-count" data-preset-count="privacy"></span>
+        </button>
+        <button class="preset-item" type="button" data-preset="ai">
+          <span class="preset-item-icon"><svg viewBox="0 0 24 24"><path d="m12 3 1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3z"/><path d="m19 15 .7 2.3L22 18l-2.3.7L19 21l-.7-2.3L16 18l2.3-.7L19 15z"/></svg></span>
+          <span class="preset-item-copy"><span class="preset-item-name">AI stack</span><span class="preset-item-note">Answer engines and AI assistants</span></span>
+          <span class="preset-item-count" data-preset-count="ai"></span>
+        </button>
+        <button class="preset-item" type="button" data-preset="academic">
+          <span class="preset-item-icon"><svg viewBox="0 0 24 24"><path d="M3 9 12 4l9 5-9 5-9-5z"/><path d="M6 11v5c3 2 9 2 12 0v-5M21 9v6"/></svg></span>
+          <span class="preset-item-copy"><span class="preset-item-name">Academic stack</span><span class="preset-item-note">Papers, preprints, and research indexes</span></span>
+          <span class="preset-item-count" data-preset-count="academic"></span>
+        </button>
+        <button class="preset-item" type="button" data-preset="osint">
+          <span class="preset-item-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 4V2M20 12h2M12 20v2M4 12H2"/></svg></span>
+          <span class="preset-item-copy"><span class="preset-item-name">OSINT stack</span><span class="preset-item-note">Public records, archives, social, and image sources</span></span>
+          <span class="preset-item-count" data-preset-count="osint"></span>
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -1670,6 +1750,93 @@ function cloneEngineData(data) {
 }
 
 const DEFAULT_ENGINE_DATA = cloneEngineData(ENGINE_DATA);
+
+const ENGINE_PRESETS = {
+  privacy: {
+    label: 'Privacy stack',
+    engines: [
+      ['Web Search', 'DuckDuckGo'],
+      ['Web Search', 'Brave Search'],
+      ['Web Search', 'Startpage'],
+      ['Web Search', 'Qwant'],
+      ['Web Search', 'Mojeek'],
+      ['Web Search', 'Searx (public)'],
+      ['Web Search', 'Kagi'],
+      ['Web Search', 'MetaGer']
+    ]
+  },
+  ai: {
+    label: 'AI stack',
+    engines: [
+      ['AI Search', 'Perplexity'],
+      ['AI Search', 'Phind'],
+      ['AI Search', 'Exa'],
+      ['AI Search', 'ChatGPT'],
+      ['AI Search', 'Gemini'],
+      ['AI Search', 'Copilot'],
+      ['AI Search', 'DeepSeek'],
+      ['AI Search', 'Grok'],
+      ['AI Search', 'iAsk'],
+      ['AI Search', 'Andi'],
+      ['AI Search', 'Globe Explorer']
+    ]
+  },
+  academic: {
+    label: 'Academic stack',
+    engines: [
+      ['Academic', 'Google Scholar'],
+      ['Academic', 'Semantic Scholar'],
+      ['Academic', 'PubMed'],
+      ['Academic', 'arXiv'],
+      ['Academic', 'JSTOR'],
+      ['Academic', 'CORE'],
+      ['Academic', 'OpenAlex'],
+      ['Academic', 'IEEE Xplore'],
+      ['Academic', 'ACM Digital Library']
+    ]
+  },
+  osint: {
+    label: 'OSINT stack',
+    engines: [
+      ['Web Search', 'Google'],
+      ['Web Search', 'Bing'],
+      ['Social & Forums', 'Reddit'],
+      ['Social & Forums', 'GitHub'],
+      ['Social & Forums', 'X / Twitter'],
+      ['Reference', 'Internet Archive'],
+      ['Reference', 'Wayback Machine'],
+      ['Reference', 'Wikidata'],
+      ['Reference', 'Snopes'],
+      ['Reverse Image', 'Google Lens'],
+      ['Reverse Image', 'TinEye'],
+      ['Reverse Image', 'Yandex Reverse'],
+      ['Reverse Image', 'Bing Visual Search'],
+      ['Business', 'BuiltWith'],
+      ['Business', 'SimilarWeb'],
+      ['Legal & Gov', 'Google Patents'],
+      ['Legal & Gov', 'Data.gov']
+    ]
+  }
+};
+
+function getEnginePreset(value) {
+  if (typeof value !== 'string') return null;
+  return ENGINE_PRESETS[value] || Object.values(ENGINE_PRESETS).find(preset => preset.label === value) || null;
+}
+
+function resolvePresetEngines(data, presetKey) {
+  const preset = getEnginePreset(presetKey);
+  if (!preset || !data || typeof data !== 'object') return [];
+  const wanted = new Set(preset.engines.map(([category, name]) => category + '::' + name));
+  const ids = [];
+  Object.keys(data).forEach((category, categoryIndex) => {
+    (data[category]?.engines || []).forEach((engine, engineIndex) => {
+      if (wanted.has(category + '::' + engine.name)) ids.push(categoryIndex + '-' + engineIndex);
+    });
+  });
+  return ids;
+}
+
 // State
 let checkedEngines = new Set();
 const faviconCache = {};
@@ -1885,6 +2052,33 @@ function clearAllEngines() {
   checkedEngines.clear();
   updateCount();
   saveState();
+}
+
+function updatePresetCounts() {
+  Object.keys(ENGINE_PRESETS).forEach(key => {
+    const count = document.querySelector(`[data-preset-count="${key}"]`);
+    if (!count) return;
+    const total = resolvePresetEngines(ENGINE_DATA, key).length;
+    count.textContent = total + ' available';
+  });
+}
+
+function applyEnginePreset(presetKey) {
+  const preset = getEnginePreset(presetKey);
+  const ids = resolvePresetEngines(ENGINE_DATA, presetKey);
+  if (!preset || !ids.length) {
+    showToast(preset ? preset.label + ' has no matching engines' : 'Unknown engine preset');
+    return;
+  }
+  const selected = new Set(ids);
+  checkedEngines = selected;
+  document.querySelectorAll('.engine-item').forEach(item => item.classList.toggle('checked', selected.has(item.dataset.id)));
+  updateCount();
+  saveState();
+  setPresetMenuOpen(false);
+  const firstCategory = getCategoryForID(ids[0]);
+  if (firstCategory) switchTab(firstCategory);
+  showToast(preset.label + ' selected ' + ids.length + ' engines');
 }
 
 function buildUI() {
@@ -2361,6 +2555,7 @@ function refreshEngineUI(selectedKeys) {
   saveState();
   updateEngineHistoryIndicators();
   updateTabArrows();
+  updatePresetCounts();
   if (activeCategory && ENGINE_DATA[activeCategory]) switchTab(activeCategory);
 }
 
@@ -2533,6 +2728,24 @@ function openEngineEditor() {
 
 function closeEngineEditor() {
   document.getElementById('engineEditorOverlay').hidden = true;
+}
+
+function setPresetMenuOpen(open) {
+  const menu = document.getElementById('presetMenu');
+  const toggle = document.getElementById('presetToggle');
+  menu.hidden = !open;
+  toggle.setAttribute('aria-expanded', String(open));
+}
+
+function togglePresetMenu() {
+  const menu = document.getElementById('presetMenu');
+  const open = menu.hidden;
+  setPresetMenuOpen(open);
+  if (open) {
+    setHistoryMenuOpen(false);
+    setOperatorPanelOpen(false);
+    updatePresetCounts();
+  }
 }
 
 function getOperatorValues() {
@@ -2800,6 +3013,7 @@ function updateTabArrows() {
 // DOM bootstrap
 loadEngineOverlay();
 buildUI();
+updatePresetCounts();
 loadState();
 loadQueryHistory();
 loadOperatorState();
@@ -2821,6 +3035,8 @@ document.getElementById('clearOperatorsBtn').addEventListener('click', clearOper
 document.getElementById('splitToggle').addEventListener('click', toggleSplitView);
 document.getElementById('splitClose').addEventListener('click', closeSplitView);
 document.getElementById('focusedToggle').addEventListener('click', toggleFocusedTab);
+document.getElementById('presetToggle').addEventListener('click', togglePresetMenu);
+document.querySelectorAll('.preset-item').forEach(button => button.addEventListener('click', () => applyEnginePreset(button.dataset.preset)));
 document.getElementById('engineEditorToggle').addEventListener('click', openEngineEditor);
 document.getElementById('engineEditorClose').addEventListener('click', closeEngineEditor);
 document.getElementById('editorCategory').addEventListener('change', renderEditorEngineList);
@@ -2839,11 +3055,15 @@ document.getElementById('engineImportInput').addEventListener('change', event =>
   document.getElementById(id).addEventListener('change', saveOperatorState);
 });
 document.addEventListener('click', event => {
-  if (!event.target.closest('.search-area') && !event.target.closest('.engine-history-btn')) setHistoryMenuOpen(false);
+  if (!event.target.closest('.search-area') && !event.target.closest('.engine-history-btn')) {
+    setHistoryMenuOpen(false);
+    setPresetMenuOpen(false);
+  }
 });
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape' && !document.getElementById('splitOverlay').hidden) closeSplitView();
   if (event.key === 'Escape' && !document.getElementById('engineEditorOverlay').hidden) closeEngineEditor();
+  if (event.key === 'Escape' && !document.getElementById('presetMenu').hidden) setPresetMenuOpen(false);
   if (event.key === 'Enter' && event.ctrlKey && !event.altKey && !event.metaKey) {
     event.preventDefault();
     doSearch();

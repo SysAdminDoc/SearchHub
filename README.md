@@ -49,6 +49,7 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 | Query Operators | Optional site, file type, and date filters applied by matching category |
 | Split View | Show up to four selected engines side-by-side with an Open in tab fallback |
 | Focused Tab | Optionally reuse the most recently opened tab for the next search |
+| Preset Stacks | Replace the current selection with Privacy, AI, Academic, or OSINT bundles |
 | Keyboard Shortcuts | `/` focuses search, `1–9`/`0` switch category tabs, `Ctrl+Enter` searches |
 | Engine Editor | Add, remove, reorder, and reset engines through a localStorage overlay |
 | JSON Engine Sharing | Export the active catalog or import a validated catalog into matching categories |
@@ -99,6 +100,8 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 **Basic search:** Select a few engines, type your query, press Enter or click the search button. Each engine opens in a new tab.
 
 **Bulk selection:** Use "Select all" / "Clear" per category. The selected engines bar shows everything you've picked across all categories.
+
+**Preset stacks:** Open **Presets** to replace the current selection with a curated Privacy, AI, Academic, or OSINT bundle. Counts reflect engines still available after local catalog edits.
 
 **Finding engines:** Use the filter box in any category panel to search by name (e.g., type "duck" to find DuckDuckGo).
 

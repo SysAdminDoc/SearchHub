@@ -14,6 +14,7 @@ All notable changes to SearchHub will be documented in this file.
 - Added: Versioned JSON import/export for sharing curated engine catalogs.
 - Added: Opt-in engine health badges with CORS-safe status classification.
 - Added: Automatic strikethrough deprecation after repeated dead probes, with healthy recovery.
+- Added: One-click Privacy, AI, Academic, and OSINT preset stacks that replace the active selection.
 
 ## [v0.1.1] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
 
