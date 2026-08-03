@@ -17,6 +17,7 @@ All notable changes to SearchHub will be documented in this file.
 - Added: One-click Privacy, AI, Academic, and OSINT preset stacks that replace the active selection.
 - Added: OSINT & Threat Intel category with VirusTotal, URLScan, Shodan, Censys, AbuseIPDB, and urlhaus.
 - Added: Torrents & Archives category with 1337x, Nyaa, Anna's Archive, Archive.org, and Library Genesis.
+- Added: Deep Maps entries for parcel lookup, county GIS, flight tracking, vessel tracking, and infrastructure maps.
 
 ## [v0.1.1] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
 

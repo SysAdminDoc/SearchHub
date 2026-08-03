@@ -69,7 +69,7 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 | Images | 24 | Google Images, Unsplash, Pexels, Flickr, DeviantArt, Getty, Adobe Stock |
 | Videos | 19 | YouTube, Vimeo, Dailymotion, Rumble, Twitch, TikTok, Bilibili |
 | News | 36 | Google News, Reuters, AP, BBC, CNN, Bloomberg, NYT, WSJ, TechCrunch |
-| Maps | 11 | Google Maps, OpenStreetMap, Apple Maps, Waze, HERE WeGo |
+| Maps | 16 | Google Maps, OpenStreetMap, Regrid, County GIS, Flightradar24, VesselFinder, OpenInfraMap |
 | Shopping | 36 | Amazon, eBay, Walmart, Etsy, Best Buy, Newegg, AliExpress |
 | Social & Forums | 26 | Reddit, X/Twitter, LinkedIn, Mastodon, Bluesky, Hacker News, Quora |
 | Reverse Image | 10 | Google Lens, TinEye, Yandex Reverse, SauceNAO, IQDB |
