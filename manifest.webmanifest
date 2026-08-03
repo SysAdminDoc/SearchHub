@@ -1,0 +1,26 @@
+{
+  "name": "SearchHub",
+  "short_name": "SearchHub",
+  "description": "Search hundreds of engines from one client-side launcher.",
+  "id": "./",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#282a36",
+  "theme_color": "#282a36",
+  "icons": [
+    {
+      "src": "./icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

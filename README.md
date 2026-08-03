@@ -10,7 +10,7 @@
 
 ## Quick Start
 
-1. Download `searchhub.html`
+1. Download `index.html` (and the optional PWA files listed below)
 2. Open it in any browser
 3. Select engines, type a query, hit Enter
 
@@ -56,6 +56,7 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 | Themes | Persistent Light, OLED, Dracula, and Nord palettes switched through CSS variables |
 | Density Modes | Persistent Comfy and Compact spacing modes for the catalog shell |
 | Share Snapshots | Encode the query and selected engines into a portable `q`/`e` URL |
+| Installable PWA | Manifest and service worker provide an installable offline app shell on HTTP(S) hosts |
 | Engine Editor | Add, remove, reorder, and reset engines through a localStorage overlay |
 | JSON Engine Sharing | Export the active catalog or import a validated catalog into matching categories |
 | Engine Health | Opt-in HEAD checks with healthy, warning, dead, unknown, and repeated-failure deprecation states |
@@ -147,15 +148,15 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 ## Hosting
 
 ### GitHub Pages
-1. Push `searchhub.html` to a repo
+1. Push `index.html`, `manifest.webmanifest`, `sw.js`, and `icon.png` to a repo
 2. Enable Pages in Settings → point to the branch
-3. Access at `https://username.github.io/repo/searchhub.html`
+3. Access at `https://username.github.io/repo/`
 
 ### Local / USB
-Just double-click `searchhub.html`. Everything runs client-side.
+Just double-click `index.html`. Everything runs client-side; service-worker installation requires serving the folder over HTTP(S).
 
 ### Any static host
-Upload the single file to Netlify, Vercel, Cloudflare Pages, S3, or any web server. No build step required.
+Upload `index.html`, `manifest.webmanifest`, `sw.js`, and `icon.png` to Netlify, Vercel, Cloudflare Pages, S3, or any web server. No build step required.
 
 ## FAQ
 

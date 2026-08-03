@@ -23,6 +23,7 @@ All notable changes to SearchHub will be documented in this file.
 - Added: Persistent Light, OLED, Dracula, and Nord theme palettes using CSS variable swaps.
 - Added: Persistent Comfy and Compact density modes for cards, tabs, grids, and selected chips.
 - Added: Shareable query snapshots encoded as `q` and compact engine-token `e` URL parameters.
+- Added: Installable PWA manifest and origin-scoped offline service worker for static HTTP(S) hosts.
 - Added: Animated opening-progress bubble showing `Opening n/total` and popup-block counts.
 
 ## [v0.1.1] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
