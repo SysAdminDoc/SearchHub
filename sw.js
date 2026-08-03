@@ -1,4 +1,4 @@
-const CACHE_NAME = 'searchhub-app-shell-v1';
+const CACHE_NAME = 'searchhub-app-shell-v2';
 const APP_SHELL = ['./', './index.html', './manifest.webmanifest', './icon.png'];
 
 self.addEventListener('install', event => {

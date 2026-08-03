@@ -1,12 +1,12 @@
 # SearchHub
 
-![Version](https://img.shields.io/badge/version-0.1.1-blue)
+![Version](https://img.shields.io/badge/version-0.2.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Any%20Browser-4285F4)
 ![No Backend](https://img.shields.io/badge/backend-none-lightgrey)
-![Engines](https://img.shields.io/badge/engines-552-6c6cff)
+![Engines](https://img.shields.io/badge/engines-557-6c6cff)
 
-> Search 552 engines across 31 categories from a single page.
+> Search 557 engines across 31 categories from a single page.
 
 ## Quick Start
 
@@ -37,7 +37,7 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 
 | Feature | Description |
 |---------|-------------|
-| 552 Engines | Deduplicated across 31 categories — no URL opens twice |
+| 557 Engines | Deduplicated across 31 categories — no URL opens twice |
 | Selected Engines Bar | Persistent chip bar showing all selections with one-click removal |
 | Per-Category Filter | Type to narrow engines within any category tab |
 | Tab Scroll Arrows | Left/right arrows with edge fades for navigating all 31 categories |

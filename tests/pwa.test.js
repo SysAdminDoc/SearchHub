@@ -11,7 +11,7 @@ assert.deepEqual(manifest.icons.map(icon => icon.src), ['./icon.png', './icon.pn
 assert.ok(manifest.icons.every(icon => icon.type === 'image/png' && icon.purpose.includes('maskable')));
 
 const serviceWorker = fs.readFileSync('sw.js', 'utf8');
-assert.match(serviceWorker, /const CACHE_NAME = 'searchhub-app-shell-v1'/);
+assert.match(serviceWorker, /const CACHE_NAME = 'searchhub-app-shell-v2'/);
 assert.match(serviceWorker, /'\.\/index\.html'/);
 assert.match(serviceWorker, /event\.request\.method !== 'GET'/);
 assert.match(serviceWorker, /requestURL\.origin !== self\.location\.origin/);

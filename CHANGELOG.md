@@ -2,7 +2,7 @@
 
 All notable changes to SearchHub will be documented in this file.
 
-## [Unreleased]
+## [v0.2.0] - 2026-08-03
 
 - Added: Local query history with a 50-entry global list and per-engine recent queries.
 - Added: Optional category-aware site, file type, and news date query operators.
