@@ -9,6 +9,7 @@ All notable changes to SearchHub will be documented in this file.
 - Added: Opt-in split view for up to four engines with per-tile tab fallbacks.
 - Added: Optional focused-tab mode that reuses the last search tab when available.
 - Added: Keyboard shortcuts for search focus, category navigation, and launching searches.
+- Added: Query URL templates with raw, uppercase, and URL-encoded query placeholders.
 
 ## [v0.1.1] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
 

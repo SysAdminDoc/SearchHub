@@ -912,7 +912,7 @@ const ENGINE_DATA = {
       { name: "Yandex Images", url: "https://yandex.com/images/search?text=", desc: "Strong reverse search" },
       { name: "Flickr", url: "https://www.flickr.com/search/?text=", desc: "Photography community" },
       { name: "Unsplash", url: "https://unsplash.com/s/photos/", desc: "Free high-res photos" },
-      { name: "Pexels", url: "https://www.pexels.com/search/", desc: "Free stock photos" },
+      { name: "Pexels", url: "https://www.pexels.com/search/{q|urlencode}", desc: "Free stock photos" },
       { name: "Pinterest", url: "https://www.pinterest.com/search/pins/?q=", desc: "Visual discovery" },
       { name: "Pixabay", url: "https://pixabay.com/images/search/", desc: "Free images & vectors" },
       { name: "DeviantArt", url: "https://www.deviantart.com/search?q=", desc: "Art community" },
@@ -1600,6 +1600,21 @@ function buildEngineQuery(query, category, values = {}) {
   return additions.length ? additions.join(' ') + ' ' + base : base;
 }
 
+function expandQueryTemplate(template, query) {
+  return template.replace(/\{q(?:\|(upper|urlencode))?\}/gi, (match, modifier) => {
+    const mode = (modifier || '').toLowerCase();
+    if (mode === 'upper') return query.toUpperCase();
+    if (mode === 'urlencode') return encodeURIComponent(query);
+    return query;
+  });
+}
+
+function buildEngineURL(engine, query) {
+  const template = engine && typeof engine.url === 'string' ? engine.url : '';
+  if (!template) return '';
+  return /\{q(?:\|(upper|urlencode))?\}/i.test(template) ? expandQueryTemplate(template, query) : template + encodeURIComponent(query);
+}
+
 function limitSplitTargets(targets, limit) {
   const requested = Number.parseInt(limit, 10);
   const count = Number.isFinite(requested) ? Math.min(Math.max(requested, 1), SPLIT_ENGINE_LIMIT) : SPLIT_ENGINE_LIMIT;
@@ -2101,7 +2116,7 @@ function doSearch() {
     const eng = getEngineByID(id);
     if (!eng) return;
     const engineQuery = buildEngineQuery(query, getCategoryForID(id), getOperatorValues());
-    const full = eng.url + encodeURIComponent(engineQuery);
+    const full = buildEngineURL(eng, engineQuery);
     if (!seen.has(full)) { seen.add(full); targets.push({ name: eng.name, url: full }); }
   });
 

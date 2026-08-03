@@ -139,7 +139,7 @@ Yes — edit the `ENGINE_DATA` object in the `<script>` block. Add entries in th
 ```js
 { name: "Engine Name", url: "https://example.com/search?q=", desc: "Short description" },
 ```
-The URL should end at the query parameter so SearchHub can append the search term.
+For non-trivial URL patterns, put a `{q}` placeholder in the URL. `{q}` inserts the raw query, `{q|upper}` uppercases it, and `{q|urlencode}` percent-encodes it. URLs without a placeholder keep the legacy behavior of appending an encoded query.
 
 **Do favicons load from external sources?**
 Yes, from `google.com/s2/favicons`. If you're fully offline, favicons won't load but everything else works fine.
