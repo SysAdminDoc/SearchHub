@@ -22,6 +22,7 @@ All notable changes to SearchHub will be documented in this file.
 - Added: Optional persistent keyboard navigation mode with roving selected-engine chip focus.
 - Added: Persistent Light, OLED, Dracula, and Nord theme palettes using CSS variable swaps.
 - Added: Persistent Comfy and Compact density modes for cards, tabs, grids, and selected chips.
+- Added: Shareable query snapshots encoded as `q` and compact engine-token `e` URL parameters.
 - Added: Animated opening-progress bubble showing `Opening n/total` and popup-block counts.
 
 ## [v0.1.1] - %Y->- (HEAD -> main, origin/main, origin/HEAD)

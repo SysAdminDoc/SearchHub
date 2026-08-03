@@ -55,6 +55,7 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 | Keyboard Navigation | Optional persistent roving-tabindex mode for selected-engine chips |
 | Themes | Persistent Light, OLED, Dracula, and Nord palettes switched through CSS variables |
 | Density Modes | Persistent Comfy and Compact spacing modes for the catalog shell |
+| Share Snapshots | Encode the query and selected engines into a portable `q`/`e` URL |
 | Engine Editor | Add, remove, reorder, and reset engines through a localStorage overlay |
 | JSON Engine Sharing | Export the active catalog or import a validated catalog into matching categories |
 | Engine Health | Opt-in HEAD checks with healthy, warning, dead, unknown, and repeated-failure deprecation states |
@@ -132,6 +133,8 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 **Themes:** Use the **Theme** picker to switch between Light, OLED, Dracula, and Nord palettes. The selected theme is stored locally and applies without rebuilding the catalog.
 
 **Density:** Use **Density** to switch between Comfy spacing for scanning and Compact spacing for fitting more engine cards on screen.
+
+**Share snapshots:** Enter a query, select engines, and choose **Share**. The generated URL uses `q` for the query and compact engine tokens in `e`; opening it restores the query and selection.
 
 **Engine editor:** Open **Manage** to customize a category. Additions, removals, and ordering changes stay local to this browser; **Reset category** restores the bundled defaults.
 

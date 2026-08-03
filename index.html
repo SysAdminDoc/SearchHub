@@ -358,6 +358,20 @@
   .density-picker svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .density-select { padding: 4px 6px; color: var(--text-secondary); background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; font: inherit; font-size: 11px; outline: none; cursor: pointer; }
   .density-select:focus { border-color: var(--border-focus); }
+  .share-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; color: var(--text-muted); background: transparent; border: 1px solid transparent; border-radius: 6px; font: inherit; cursor: pointer; transition: all 0.15s ease; }
+  .share-toggle:hover, .share-toggle[aria-expanded="true"] { color: var(--text-primary); background: var(--bg-card); border-color: var(--border); }
+  .share-toggle svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .share-menu { max-width: 680px; margin: 10px auto 0; padding: 12px; background: var(--surface-glass); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); backdrop-filter: blur(16px); }
+  .share-menu[hidden] { display: none; }
+  .share-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 9px; }
+  .share-title { color: var(--text-secondary); font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+  .share-close { padding: 3px 6px; color: var(--text-muted); background: transparent; border: 1px solid transparent; border-radius: 5px; font: inherit; font-size: 11px; cursor: pointer; }
+  .share-close:hover { color: var(--text-primary); background: var(--bg-card-hover); border-color: var(--border); }
+  .share-url-row { display: flex; gap: 7px; }
+  .share-url-input { min-width: 0; flex: 1; padding: 8px 9px; color: var(--text-secondary); background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; font: inherit; font-size: 11px; outline: none; }
+  .share-copy { flex-shrink: 0; padding: 8px 11px; color: #fff; background: var(--accent); border: 0; border-radius: 6px; font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
+  .share-copy:hover { background: var(--accent-hover); }
+  .share-help { margin: 8px 0 0; color: var(--text-muted); font-size: 10px; }
 
   .operator-toggle {
     display: inline-flex;
@@ -1136,6 +1150,10 @@
           <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 9 8 9"/><path d="M12 7v5l3 2"/></svg>
           <span>History</span>
         </button>
+        <button class="share-toggle" id="shareToggle" type="button" aria-expanded="false" aria-controls="shareMenu" title="Share the current query and selected engines">
+          <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
+          <span>Share</span>
+        </button>
         <button class="operator-toggle" id="operatorToggle" type="button" aria-expanded="false" aria-controls="operatorPanel">
           <svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
           <span>Operators</span>
@@ -1236,6 +1254,11 @@
           <span class="preset-item-count" data-preset-count="osint"></span>
         </button>
       </div>
+    </div>
+    <div class="share-menu" id="shareMenu" hidden>
+      <div class="share-header"><span class="share-title">Share snapshot</span><button class="share-close" id="shareClose" type="button">Close</button></div>
+      <div class="share-url-row"><input class="share-url-input" id="shareURLInput" type="url" readonly aria-label="Share URL"><button class="share-copy" id="shareCopy" type="button">Copy URL</button></div>
+      <p class="share-help">The link includes the current query and selected engines. Opening it restores both.</p>
     </div>
   </div>
 </div>
@@ -2156,6 +2179,90 @@ let lastOpenedTab = null;
 let historyScope = { engineId: null };
 let keyboardNavigationEnabled = false;
 let selectedChipFocusIndex = 0;
+
+const SHARE_ENGINE_ALIASES = { duckduckgo: 'ddg' };
+
+function normalizeShareToken(value) {
+  return typeof value === 'string' ? value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') : '';
+}
+
+function getShareEngineBaseToken(name) {
+  const normalized = normalizeShareToken(name);
+  return SHARE_ENGINE_ALIASES[normalized] || normalized;
+}
+
+function getShareEngineEntries(data) {
+  const entries = [];
+  Object.keys(data || {}).forEach((category, categoryIndex) => {
+    (data[category]?.engines || []).forEach((engine, engineIndex) => {
+      entries.push({ id: categoryIndex + '-' + engineIndex, category, engine });
+    });
+  });
+  return entries;
+}
+
+function getShareEngineTokenMap(data) {
+  const entries = getShareEngineEntries(data);
+  const baseCounts = new Map();
+  entries.forEach(entry => {
+    const base = getShareEngineBaseToken(entry.engine.name);
+    baseCounts.set(base, (baseCounts.get(base) || 0) + 1);
+  });
+  const tokens = new Map();
+  const ambiguous = new Set();
+  entries.forEach(entry => {
+    const base = getShareEngineBaseToken(entry.engine.name);
+    const token = baseCounts.get(base) > 1 ? normalizeShareToken(entry.category) + '-' + base : base;
+    tokens.set(token, entry.id);
+    if (!ambiguous.has(base)) {
+      if (!tokens.has(base)) tokens.set(base, entry.id);
+      else if (tokens.get(base) !== entry.id) { tokens.delete(base); ambiguous.add(base); }
+    }
+  });
+  return { entries, tokens, baseCounts };
+}
+
+function buildShareEngineTokens(ids, data) {
+  const { entries, baseCounts } = getShareEngineTokenMap(data);
+  const byID = new Map(entries.map(entry => [entry.id, entry]));
+  const seen = new Set();
+  return (Array.isArray(ids) ? ids : []).map(id => byID.get(String(id))).filter(Boolean).map(entry => {
+    const base = getShareEngineBaseToken(entry.engine.name);
+    return baseCounts.get(base) > 1 ? normalizeShareToken(entry.category) + '-' + base : base;
+  }).filter(token => {
+    if (seen.has(token)) return false;
+    seen.add(token);
+    return true;
+  });
+}
+
+function resolveShareEngineIDs(data, tokens) {
+  const { tokens: tokenMap } = getShareEngineTokenMap(data);
+  const requested = Array.isArray(tokens) ? tokens : typeof tokens === 'string' ? tokens.split(',') : [];
+  const ids = [];
+  const seen = new Set();
+  requested.forEach(token => {
+    const id = tokenMap.get(normalizeShareToken(token));
+    if (id && !seen.has(id)) { seen.add(id); ids.push(id); }
+  });
+  return ids;
+}
+
+function parseShareParams(search) {
+  const params = new URLSearchParams(typeof search === 'string' ? search : '');
+  const query = (params.get('q') || '').trim().slice(0, MAX_QUERY_LENGTH);
+  const engineTokens = params.has('e') ? (params.get('e') || '').split(',').map(normalizeShareToken).filter(Boolean) : null;
+  return { query, engineTokens };
+}
+
+function buildShareURL(query, ids, data, baseHref) {
+  const base = new URL(baseHref);
+  const normalizedQuery = typeof query === 'string' ? query.trim().slice(0, MAX_QUERY_LENGTH) : '';
+  const tokens = buildShareEngineTokens(ids, data);
+  base.search = '?q=' + encodeURIComponent(normalizedQuery) + (tokens.length ? '&e=' + tokens.join(',') : '');
+  base.hash = '';
+  return base.href;
+}
 
 function normalizeHistoryEntries(value, limit) {
   if (!Array.isArray(value)) return [];
@@ -3164,6 +3271,39 @@ function loadDensity() {
   applyDensity(density);
 }
 
+function setShareMenuOpen(open) {
+  const menu = document.getElementById('shareMenu');
+  const toggle = document.getElementById('shareToggle');
+  menu.hidden = !open;
+  toggle.setAttribute('aria-expanded', String(open));
+}
+
+function openShareMenu() {
+  const query = document.getElementById('searchInput').value.trim();
+  if (!query) { showToast('Enter a search query to share'); return; }
+  if (checkedEngines.size === 0) { showToast('Select at least one engine to share'); return; }
+  const url = buildShareURL(query, [...checkedEngines], ENGINE_DATA, location.href);
+  document.getElementById('shareURLInput').value = url;
+  setShareMenuOpen(true);
+  setHistoryMenuOpen(false);
+  setPresetMenuOpen(false);
+  setOperatorPanelOpen(false);
+}
+
+function closeShareMenu() {
+  setShareMenuOpen(false);
+}
+
+function copyShareURL() {
+  const input = document.getElementById('shareURLInput');
+  const url = input.value;
+  input.focus();
+  input.select();
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(url).then(() => showToast('Share URL copied')).catch(() => showToast('Select the share URL to copy'));
+  } else showToast('Select the share URL to copy');
+}
+
 function getOperatorValues() {
   return {
     site: normalizeOperatorValue(document.getElementById('operatorSite').value, 'site'),
@@ -3445,6 +3585,17 @@ function loadState() {
   } catch {}
 }
 
+function loadSharedState() {
+  if (typeof location === 'undefined') return;
+  const shared = parseShareParams(location.search);
+  if (shared.query) document.getElementById('searchInput').value = shared.query;
+  if (shared.engineTokens === null) return;
+  checkedEngines = new Set(resolveShareEngineIDs(ENGINE_DATA, shared.engineTokens));
+  document.querySelectorAll('.engine-item').forEach(item => item.classList.toggle('checked', checkedEngines.has(item.dataset.id)));
+  updateCount();
+  saveState();
+}
+
 function scrollTabs(dir) {
   const tabs = document.getElementById('tabs');
   tabs.scrollBy({ left: dir * 260, behavior: 'smooth' });
@@ -3467,6 +3618,7 @@ loadEngineOverlay();
 buildUI();
 updatePresetCounts();
 loadState();
+loadSharedState();
 loadKeyboardNavigationState();
 loadQueryHistory();
 loadOperatorState();
@@ -3482,6 +3634,9 @@ requestAnimationFrame(updateTabArrows);
 document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
 document.getElementById('searchBtn').addEventListener('click', doSearch);
 document.getElementById('historyToggle').addEventListener('click', toggleQueryHistory);
+document.getElementById('shareToggle').addEventListener('click', openShareMenu);
+document.getElementById('shareClose').addEventListener('click', closeShareMenu);
+document.getElementById('shareCopy').addEventListener('click', copyShareURL);
 document.getElementById('clearHistoryBtn').addEventListener('click', clearQueryHistory);
 document.getElementById('operatorToggle').addEventListener('click', toggleOperatorPanel);
 document.getElementById('clearOperatorsBtn').addEventListener('click', clearOperators);
@@ -3514,12 +3669,14 @@ document.addEventListener('click', event => {
   if (!event.target.closest('.search-area') && !event.target.closest('.engine-history-btn')) {
     setHistoryMenuOpen(false);
     setPresetMenuOpen(false);
+    setShareMenuOpen(false);
   }
 });
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape' && !document.getElementById('splitOverlay').hidden) closeSplitView();
   if (event.key === 'Escape' && !document.getElementById('engineEditorOverlay').hidden) closeEngineEditor();
   if (event.key === 'Escape' && !document.getElementById('presetMenu').hidden) setPresetMenuOpen(false);
+  if (event.key === 'Escape' && !document.getElementById('shareMenu').hidden) setShareMenuOpen(false);
   if (event.key === 'Enter' && event.ctrlKey && !event.altKey && !event.metaKey) {
     event.preventDefault();
     doSearch();
