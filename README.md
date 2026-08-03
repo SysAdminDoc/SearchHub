@@ -59,6 +59,7 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 | Installable PWA | Manifest and service worker provide an installable offline app shell on HTTP(S) hosts |
 | Chrome Omnibox | Optional Manifest V3 provider maps `sh tornado` to the default Google/Bing/DuckDuckGo bundle |
 | Bookmarklet | Draggable link seeds SearchHub from selected text on any page |
+| OpenSearch | Linked descriptor registers SearchHub as a browser search provider |
 | Engine Editor | Add, remove, reorder, and reset engines through a localStorage overlay |
 | JSON Engine Sharing | Export the active catalog or import a validated catalog into matching categories |
 | Engine Health | Opt-in HEAD checks with healthy, warning, dead, unknown, and repeated-failure deprecation states |
@@ -165,6 +166,9 @@ Load the repository root as an unpacked extension from `chrome://extensions` wit
 
 ### Bookmarklet (optional)
 From a hosted SearchHub page, drag the **Bookmarklet** link to your bookmarks bar. On any page, select text and click the bookmarklet; it opens the same SearchHub deployment with that selection and the default Google, Bing, and DuckDuckGo bundle.
+
+### OpenSearch (optional)
+The linked `opensearch.xml` descriptor lets compatible browsers add SearchHub as a search provider; its template restores the query through `q` and uses the default `e=google,bing,ddg` bundle.
 
 ## FAQ
 
