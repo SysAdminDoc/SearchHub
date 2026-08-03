@@ -182,6 +182,29 @@
 
   .preset-toggle svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
+  .keyboard-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font: inherit;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .keyboard-toggle:hover,
+  .keyboard-toggle[aria-pressed="true"] {
+    color: var(--text-primary);
+    background: var(--bg-card);
+    border-color: var(--border);
+  }
+
+  .keyboard-toggle svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
   .operator-toggle {
     display: inline-flex;
     align-items: center;
@@ -650,6 +673,10 @@
     border-radius: 4px;
     cursor: pointer;
     color: var(--text-muted);
+    background: transparent;
+    border: 0;
+    padding: 0;
+    font: inherit;
     transition: all 0.15s ease;
     flex-shrink: 0;
     margin-left: 2px;
@@ -944,6 +971,10 @@
         <button class="preset-toggle" id="presetToggle" type="button" aria-expanded="false" aria-controls="presetMenu">
           <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="11" cy="17" r="2"/></svg>
           <span>Presets</span>
+        </button>
+        <button class="keyboard-toggle" id="keyboardNavToggle" type="button" aria-pressed="false" title="Enable arrow-key navigation across selected engines">
+          <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h2M11 9h2M15 9h2M7 13h2M11 13h6"/><path d="M8 17h8"/></svg>
+          <span>Keyboard nav</span>
         </button>
         <button class="engine-editor-toggle" id="engineEditorToggle" type="button">
           <svg viewBox="0 0 24 24"><path d="M12 3a2 2 0 0 1 2 2v1.1a7.9 7.9 0 0 1 1.8 1l.9-.5a2 2 0 1 1 2 3.5l-.9.5a8 8 0 0 1 0 2l.9.5a2 2 0 1 1-2 3.5l-.9-.5a7.9 7.9 0 0 1-1.8 1V19a2 2 0 1 1-4 0v-1.1a7.9 7.9 0 0 1-1.8-1l-.9.5a2 2 0 1 1-2-3.5l.9-.5a8 8 0 0 1 0-2l-.9-.5a2 2 0 1 1 2-3.5l.9.5a7.9 7.9 0 0 1 1.8-1V5a2 2 0 0 1 2-2z"/><circle cx="12" cy="12" r="2.5"/></svg>
@@ -1889,6 +1920,7 @@ const FILETYPE_OPERATOR_CATEGORIES = new Set(['Academic', 'Reference', 'Code & D
 const DATE_OPERATOR_CATEGORIES = new Set(['News']);
 const SPLIT_ENGINE_LIMIT = 4;
 const FOCUSED_TAB_STORAGE_KEY = 'searchhub_focused_tab_v1';
+const KEYBOARD_NAV_STORAGE_KEY = 'searchhub_keyboard_nav_v1';
 let queryHistory = [];
 let engineQueryHistory = {};
 let engineHealthState = {};
@@ -1897,6 +1929,8 @@ let splitViewEnabled = false;
 let focusedTabEnabled = false;
 let lastOpenedTab = null;
 let historyScope = { engineId: null };
+let keyboardNavigationEnabled = false;
+let selectedChipFocusIndex = 0;
 
 function normalizeHistoryEntries(value, limit) {
   if (!Array.isArray(value)) return [];
@@ -2010,6 +2044,17 @@ function getCategoryHotkeyIndex(key) {
   return -1;
 }
 
+function getSelectedChipNavigationIndex(index, key, count) {
+  const total = Number.parseInt(count, 10);
+  if (!Number.isFinite(total) || total <= 0) return -1;
+  const current = Math.min(Math.max(Number.parseInt(index, 10) || 0, 0), total - 1);
+  if (key === 'Home') return 0;
+  if (key === 'End') return total - 1;
+  if (key === 'ArrowRight' || key === 'ArrowDown') return (current + 1) % total;
+  if (key === 'ArrowLeft' || key === 'ArrowUp') return (current - 1 + total) % total;
+  return current;
+}
+
 function getFavicon(url) {
   if (faviconCache[url]) return faviconCache[url];
   try {
@@ -2060,18 +2105,66 @@ function updateTabBadges() {
 function renderSelectedBar() {
   const bar = document.getElementById('selectedBar');
   const chips = document.getElementById('selectedChips');
-  if (checkedEngines.size === 0) { bar.classList.add('empty'); chips.innerHTML = ''; return; }
+  if (checkedEngines.size === 0) { bar.classList.add('empty'); chips.innerHTML = ''; updateKeyboardNavigation(); return; }
   bar.classList.remove('empty');
   chips.innerHTML = '';
+  chips.setAttribute('role', 'list');
   checkedEngines.forEach(id => {
     const eng = getEngineByID(id);
     if (!eng) return;
     const cat = getCategoryForID(id);
     const chip = document.createElement('span');
     chip.className = 'sel-chip';
-    chip.innerHTML = `<img class="sel-chip-icon" src="${getFavicon(eng.url)}" alt="" onerror="this.style.display='none'"><span>${eng.name}</span><span class="sel-chip-cat">${cat}</span><span class="sel-chip-x" onclick="removeEngine('${id}',event)" title="Remove"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>`;
+    chip.dataset.id = id;
+    chip.setAttribute('role', 'listitem');
+    chip.innerHTML = `<img class="sel-chip-icon" src="${getFavicon(eng.url)}" alt="" onerror="this.style.display='none'"><span class="sel-chip-name"></span><span class="sel-chip-cat">${cat}</span><button class="sel-chip-x" type="button" title="Remove" aria-label="Remove selected engine"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+    chip.querySelector('.sel-chip-name').textContent = eng.name;
+    chip.querySelector('.sel-chip-x').addEventListener('click', event => removeEngine(id, event));
+    chip.addEventListener('keydown', handleSelectedChipKeydown);
     chips.appendChild(chip);
   });
+  updateKeyboardNavigation();
+}
+
+function updateKeyboardNavigation() {
+  const chips = Array.from(document.querySelectorAll('.sel-chip'));
+  if (!chips.length) { selectedChipFocusIndex = 0; return; }
+  selectedChipFocusIndex = Math.min(selectedChipFocusIndex, chips.length - 1);
+  chips.forEach((chip, index) => {
+    chip.tabIndex = keyboardNavigationEnabled && index === selectedChipFocusIndex ? 0 : -1;
+    chip.setAttribute('aria-label', (chip.querySelector('.sel-chip-name')?.textContent || 'Selected engine') + ' selected');
+    const removeButton = chip.querySelector('.sel-chip-x');
+    if (removeButton) removeButton.tabIndex = keyboardNavigationEnabled ? -1 : 0;
+  });
+}
+
+function handleSelectedChipKeydown(event) {
+  if (!keyboardNavigationEnabled) return;
+  const chips = Array.from(document.querySelectorAll('.sel-chip'));
+  const current = chips.indexOf(event.currentTarget);
+  if (current < 0) return;
+  if (['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
+    event.preventDefault();
+    selectedChipFocusIndex = getSelectedChipNavigationIndex(current, event.key, chips.length);
+    updateKeyboardNavigation();
+    chips[selectedChipFocusIndex]?.focus();
+    return;
+  }
+  if (event.key === 'Delete' || event.key === 'Backspace') {
+    event.preventDefault();
+    removeEngine(event.currentTarget.dataset.id, event);
+    const remaining = Array.from(document.querySelectorAll('.sel-chip'));
+    if (remaining.length) {
+      selectedChipFocusIndex = Math.min(current, remaining.length - 1);
+      updateKeyboardNavigation();
+      remaining[selectedChipFocusIndex].focus();
+    }
+    return;
+  }
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    event.currentTarget.querySelector('.sel-chip-x')?.focus();
+  }
 }
 
 function removeEngine(id, event) {
@@ -2784,6 +2877,24 @@ function togglePresetMenu() {
   }
 }
 
+function setKeyboardNavigationEnabled(enabled) {
+  keyboardNavigationEnabled = Boolean(enabled);
+  const toggle = document.getElementById('keyboardNavToggle');
+  if (toggle) toggle.setAttribute('aria-pressed', String(keyboardNavigationEnabled));
+  updateKeyboardNavigation();
+  try { localStorage.setItem(KEYBOARD_NAV_STORAGE_KEY, JSON.stringify(keyboardNavigationEnabled)); } catch {}
+}
+
+function toggleKeyboardNavigation() {
+  setKeyboardNavigationEnabled(!keyboardNavigationEnabled);
+}
+
+function loadKeyboardNavigationState() {
+  let enabled = false;
+  try { enabled = JSON.parse(localStorage.getItem(KEYBOARD_NAV_STORAGE_KEY)) === true; } catch {}
+  setKeyboardNavigationEnabled(enabled);
+}
+
 function getOperatorValues() {
   return {
     site: normalizeOperatorValue(document.getElementById('operatorSite').value, 'site'),
@@ -3051,6 +3162,7 @@ loadEngineOverlay();
 buildUI();
 updatePresetCounts();
 loadState();
+loadKeyboardNavigationState();
 loadQueryHistory();
 loadOperatorState();
 loadFocusedTabState();
@@ -3073,6 +3185,7 @@ document.getElementById('splitClose').addEventListener('click', closeSplitView);
 document.getElementById('focusedToggle').addEventListener('click', toggleFocusedTab);
 document.getElementById('presetToggle').addEventListener('click', togglePresetMenu);
 document.querySelectorAll('.preset-item').forEach(button => button.addEventListener('click', () => applyEnginePreset(button.dataset.preset)));
+document.getElementById('keyboardNavToggle').addEventListener('click', toggleKeyboardNavigation);
 document.getElementById('engineEditorToggle').addEventListener('click', openEngineEditor);
 document.getElementById('engineEditorClose').addEventListener('click', closeEngineEditor);
 document.getElementById('editorCategory').addEventListener('change', renderEditorEngineList);

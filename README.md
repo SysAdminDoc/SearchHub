@@ -51,6 +51,7 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 | Focused Tab | Optionally reuse the most recently opened tab for the next search |
 | Preset Stacks | Replace the current selection with Privacy, AI, Academic, or OSINT bundles |
 | Keyboard Shortcuts | `/` focuses search, `1–9`/`0` switch category tabs, `Ctrl+Enter` searches |
+| Keyboard Navigation | Optional persistent roving-tabindex mode for selected-engine chips |
 | Engine Editor | Add, remove, reorder, and reset engines through a localStorage overlay |
 | JSON Engine Sharing | Export the active catalog or import a validated catalog into matching categories |
 | Engine Health | Opt-in HEAD checks with healthy, warning, dead, unknown, and repeated-failure deprecation states |
@@ -120,6 +121,8 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 **Focused tab:** Turn on **Focused tab** to reuse the most recently opened search tab for the next search. If that tab was closed, SearchHub opens a new one.
 
 **Keyboard shortcuts:** Press `/` from anywhere outside an input to focus search, `1`–`9` or `0` to switch the first ten category tabs, and `Ctrl+Enter` to launch the current search from any control.
+
+**Keyboard navigation:** Turn on **Keyboard nav** to move through selected-engine chips with arrow keys, `Home`, and `End`. `Delete`/`Backspace` removes the focused engine; `Enter` or `Space` focuses its remove control.
 
 **Engine editor:** Open **Manage** to customize a category. Additions, removals, and ordering changes stay local to this browser; **Reset category** restores the bundled defaults.
 
