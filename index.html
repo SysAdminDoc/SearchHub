@@ -794,6 +794,9 @@
     text-overflow: ellipsis;
   }
 
+  .engine-item.deprecated .engine-name { color: var(--text-muted); text-decoration: line-through; text-decoration-thickness: 1px; }
+  .engine-item.deprecated .engine-desc { color: var(--rose); }
+
   .engine-desc {
     font-size: 10.5px;
     color: var(--text-muted);
@@ -1676,6 +1679,7 @@ const QUERY_HISTORY_LIMIT = 50;
 const ENGINE_HISTORY_LIMIT = 10;
 const MAX_QUERY_LENGTH = 500;
 const ENGINE_HEALTH_STORAGE_KEY = 'searchhub_engine_health_v1';
+const DEPRECATION_FAILURE_THRESHOLD = 2;
 const OPERATOR_STORAGE_KEY = 'searchhub_query_operators_v1';
 const SITE_OPERATOR_CATEGORIES = new Set(['Web Search']);
 const FILETYPE_OPERATOR_CATEGORIES = new Set(['Academic', 'Reference', 'Code & Dev', 'Learning', 'Legal & Gov', 'Science', 'Downloads']);
@@ -1783,6 +1787,18 @@ function classifyHealthStatus(status) {
   if (code >= 200 && code < 400) return 'healthy';
   if ([401, 403, 405, 408, 409, 429, 451].includes(code)) return 'warning';
   return 'dead';
+}
+
+function nextHealthRecord(previous, status, latency, checkedAt = Date.now()) {
+  const oldFailures = previous && Number.isInteger(previous.failures) ? previous.failures : 0;
+  const failures = status === 'dead' ? oldFailures + 1 : status === 'healthy' ? 0 : oldFailures;
+  return {
+    status,
+    checkedAt,
+    latency: latency || 0,
+    failures,
+    deprecated: status === 'healthy' ? false : Boolean(previous?.deprecated) || failures >= DEPRECATION_FAILURE_THRESHOLD
+  };
 }
 
 function getCategoryHotkeyIndex(key) {
@@ -2113,7 +2129,9 @@ function normalizeHealthState(value) {
     state[key] = {
       status: record.status,
       checkedAt: Number.isFinite(Number(record.checkedAt)) ? Number(record.checkedAt) : 0,
-      latency: Number.isFinite(Number(record.latency)) ? Number(record.latency) : 0
+      latency: Number.isFinite(Number(record.latency)) ? Number(record.latency) : 0,
+      failures: Number.isInteger(Number(record.failures)) ? Number(record.failures) : 0,
+      deprecated: Boolean(record.deprecated)
     };
   });
   return state;
@@ -2136,6 +2154,7 @@ function updateHealthBadges() {
     const badge = item.querySelector('.engine-health-badge');
     if (!badge) return;
     const record = getEngineHealthRecord(item.dataset.id);
+    item.classList.toggle('deprecated', Boolean(record.deprecated));
     badge.className = 'engine-health-badge ' + record.status;
     badge.textContent = labels[record.status];
     badge.title = descriptions[record.status] + '. Click to retry.';
@@ -2148,7 +2167,8 @@ function persistEngineHealth() {
 }
 
 function setEngineHealth(id, status, latency) {
-  engineHealthState[getEngineHistoryKey(id)] = { status, checkedAt: Date.now(), latency: latency || 0 };
+  const key = getEngineHistoryKey(id);
+  engineHealthState[key] = nextHealthRecord(engineHealthState[key], status, latency);
   persistEngineHealth();
   updateHealthBadges();
 }

@@ -11,12 +11,12 @@ assert.notEqual(bootstrapMarker, -1, 'health helpers must be defined before DOM 
 
 const context = { console, Intl, URL };
 vm.runInNewContext(
-  `${scriptMatch[1].slice(0, bootstrapMarker)}\nthis.__health = { classifyHealthStatus, normalizeHealthState };`,
+  `${scriptMatch[1].slice(0, bootstrapMarker)}\nthis.__health = { classifyHealthStatus, normalizeHealthState, nextHealthRecord };`,
   context,
   { filename: 'index.html' }
 );
 
-const { classifyHealthStatus, normalizeHealthState } = context.__health;
+const { classifyHealthStatus, normalizeHealthState, nextHealthRecord } = context.__health;
 assert.equal(classifyHealthStatus(200), 'healthy');
 assert.equal(classifyHealthStatus(302), 'healthy');
 assert.equal(classifyHealthStatus(403), 'warning');
@@ -30,8 +30,14 @@ const state = normalizeHealthState({
   unknown: { status: 'unknown', checkedAt: '20', latency: '4' }
 });
 assert.deepEqual(JSON.parse(JSON.stringify(state)), {
-  good: { status: 'healthy', checkedAt: 10, latency: 25 },
-  unknown: { status: 'unknown', checkedAt: 20, latency: 4 }
+  good: { status: 'healthy', checkedAt: 10, latency: 25, failures: 0, deprecated: false },
+  unknown: { status: 'unknown', checkedAt: 20, latency: 4, failures: 0, deprecated: false }
 });
+
+const firstFailure = nextHealthRecord(null, 'dead', 30, 100);
+const secondFailure = nextHealthRecord(firstFailure, 'dead', 40, 200);
+assert.equal(firstFailure.deprecated, false);
+assert.equal(secondFailure.deprecated, true, 'two consecutive dead probes should mark an engine deprecated');
+assert.equal(nextHealthRecord(secondFailure, 'healthy', 20, 300).deprecated, false);
 
 console.log('health check tests passed');
