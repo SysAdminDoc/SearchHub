@@ -159,6 +159,63 @@
 
   .history-toggle svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
+  .operator-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font: inherit;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .operator-toggle:hover,
+  .operator-toggle[aria-expanded="true"] {
+    color: var(--text-primary);
+    background: var(--bg-card);
+    border-color: var(--border);
+  }
+
+  .operator-toggle svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  .operator-panel {
+    max-width: 680px;
+    margin: 10px auto 0;
+    padding: 14px;
+    background: rgba(24, 24, 36, 0.96);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 12px 36px rgba(0,0,0,0.25);
+    backdrop-filter: blur(16px);
+  }
+
+  .operator-panel[hidden] { display: none; }
+
+  .operator-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .operator-panel-title { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+  .operator-panel-note { margin: 0; color: var(--text-muted); font-size: 11px; }
+  .operator-clear { padding: 3px 6px; color: var(--rose); background: transparent; border: none; border-radius: 4px; font: inherit; font-size: 11px; cursor: pointer; opacity: 0.75; }
+  .operator-clear:hover { background: rgba(251,113,133,0.08); opacity: 1; }
+
+  .operator-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .operator-field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+  .operator-field span { color: var(--text-muted); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.7px; }
+  .operator-input { width: 100%; min-width: 0; padding: 7px 8px; color: var(--text-primary); background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; outline: none; font: inherit; font-size: 12px; }
+  .operator-input:focus { border-color: var(--border-focus); }
+  .operator-input::placeholder { color: var(--text-muted); opacity: 0.75; }
+  .operator-help { margin: 10px 0 0; color: var(--text-muted); font-size: 10px; line-height: 1.4; }
+
   .query-history-menu {
     max-width: 680px;
     margin: 10px auto 0;
@@ -599,6 +656,7 @@
     .container { padding: 0 14px; }
     .tab { padding: 7px 12px; font-size: 11.5px; }
     .filter-input { width: 120px; }
+    .operator-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .panel-header { flex-direction: column; align-items: flex-start; }
   }
 </style>
@@ -625,11 +683,31 @@
           <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 9 8 9"/><path d="M12 7v5l3 2"/></svg>
           <span>History</span>
         </button>
+        <button class="operator-toggle" id="operatorToggle" type="button" aria-expanded="false" aria-controls="operatorPanel">
+          <svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+          <span>Operators</span>
+        </button>
         <span class="popup-hint" title="Allow popups in your browser to open multiple tabs">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
           <span>Allow popups for multi-tab</span>
         </span>
       </div>
+    </div>
+    <div class="operator-panel" id="operatorPanel" hidden>
+      <div class="operator-panel-header">
+        <div>
+          <div class="operator-panel-title">Category-aware query operators</div>
+          <p class="operator-panel-note" id="operatorSummary">No operators active</p>
+        </div>
+        <button class="operator-clear" id="clearOperatorsBtn" type="button">Clear</button>
+      </div>
+      <div class="operator-grid">
+        <label class="operator-field"><span>Web site</span><input class="operator-input" id="operatorSite" type="text" placeholder="example.com" autocomplete="off"></label>
+        <label class="operator-field"><span>File type</span><input class="operator-input" id="operatorFiletype" type="text" placeholder="pdf" autocomplete="off"></label>
+        <label class="operator-field"><span>After</span><input class="operator-input" id="operatorAfter" type="date"></label>
+        <label class="operator-field"><span>Before</span><input class="operator-input" id="operatorBefore" type="date"></label>
+      </div>
+      <p class="operator-help">Site applies to Web Search, file type applies to document-oriented categories, and dates apply to News. Existing operators in your query are preserved.</p>
     </div>
     <div class="query-history-menu" id="queryHistoryMenu" hidden>
       <div class="history-header">
@@ -1330,8 +1408,13 @@ const ENGINE_HISTORY_KEY = 'searchhub_engine_history_v1';
 const QUERY_HISTORY_LIMIT = 50;
 const ENGINE_HISTORY_LIMIT = 10;
 const MAX_QUERY_LENGTH = 500;
+const OPERATOR_STORAGE_KEY = 'searchhub_query_operators_v1';
+const SITE_OPERATOR_CATEGORIES = new Set(['Web Search']);
+const FILETYPE_OPERATOR_CATEGORIES = new Set(['Academic', 'Reference', 'Code & Dev', 'Learning', 'Legal & Gov', 'Science', 'Downloads']);
+const DATE_OPERATOR_CATEGORIES = new Set(['News']);
 let queryHistory = [];
 let engineQueryHistory = {};
+let operatorState = { site: '', filetype: '', after: '', before: '' };
 let historyScope = { engineId: null };
 
 function normalizeHistoryEntries(value, limit) {
@@ -1355,6 +1438,44 @@ function addHistoryEntry(history, query, limit) {
   if (!normalized || normalized.length > MAX_QUERY_LENGTH) return normalizeHistoryEntries(history, limit);
   const existing = normalizeHistoryEntries(history, limit).filter(entry => entry.query.toLocaleLowerCase() !== normalized.toLocaleLowerCase());
   return [{ query: normalized, timestamp: Date.now() }, ...existing].slice(0, limit);
+}
+
+function normalizeOperatorValue(value, operator) {
+  const normalized = typeof value === 'string' ? value.trim() : '';
+  if (!normalized) return '';
+  if (operator === 'site') {
+    return normalized
+      .replace(/^site:/i, '')
+      .replace(/^https?:\/\//i, '')
+      .replace(/^www\./i, '')
+      .split(/[/?#\s]/, 1)[0]
+      .slice(0, 253);
+  }
+  if (operator === 'filetype') {
+    return normalized.replace(/^\./, '').replace(/[^a-z0-9+_-]/gi, '').toLowerCase().slice(0, 20);
+  }
+  if (operator === 'after' || operator === 'before') {
+    return /^\d{4}-\d{2}-\d{2}$/.test(normalized) ? normalized : '';
+  }
+  return '';
+}
+
+function queryHasOperator(query, operator) {
+  return new RegExp('(?:^|\\s)' + operator + ':', 'i').test(query);
+}
+
+function buildEngineQuery(query, category, values = {}) {
+  const base = typeof query === 'string' ? query.trim() : '';
+  if (!base) return '';
+  const additions = [];
+  const add = (operator, value, enabled) => {
+    if (enabled && value && !queryHasOperator(base, operator)) additions.push(operator + ':' + value);
+  };
+  add('site', normalizeOperatorValue(values.site, 'site'), SITE_OPERATOR_CATEGORIES.has(category));
+  add('filetype', normalizeOperatorValue(values.filetype, 'filetype'), FILETYPE_OPERATOR_CATEGORIES.has(category));
+  add('after', normalizeOperatorValue(values.after, 'after'), DATE_OPERATOR_CATEGORIES.has(category));
+  add('before', normalizeOperatorValue(values.before, 'before'), DATE_OPERATOR_CATEGORIES.has(category));
+  return additions.length ? additions.join(' ') + ' ' + base : base;
 }
 
 function getFavicon(url) {
@@ -1657,6 +1778,76 @@ function loadQueryHistory() {
   updateEngineHistoryIndicators();
 }
 
+function getOperatorValues() {
+  return {
+    site: normalizeOperatorValue(document.getElementById('operatorSite').value, 'site'),
+    filetype: normalizeOperatorValue(document.getElementById('operatorFiletype').value, 'filetype'),
+    after: normalizeOperatorValue(document.getElementById('operatorAfter').value, 'after'),
+    before: normalizeOperatorValue(document.getElementById('operatorBefore').value, 'before')
+  };
+}
+
+function updateOperatorSummary() {
+  const labels = [];
+  if (operatorState.site) labels.push('site:' + operatorState.site);
+  if (operatorState.filetype) labels.push('filetype:' + operatorState.filetype);
+  if (operatorState.after) labels.push('after:' + operatorState.after);
+  if (operatorState.before) labels.push('before:' + operatorState.before);
+  document.getElementById('operatorSummary').textContent = labels.length ? labels.join(' \u2022 ') : 'No operators active';
+}
+
+function persistOperatorState() {
+  try { localStorage.setItem(OPERATOR_STORAGE_KEY, JSON.stringify(operatorState)); } catch {}
+}
+
+function saveOperatorState() {
+  operatorState = getOperatorValues();
+  persistOperatorState();
+  updateOperatorSummary();
+}
+
+function loadOperatorState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(OPERATOR_STORAGE_KEY));
+    if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
+      operatorState = {
+        site: normalizeOperatorValue(saved.site, 'site'),
+        filetype: normalizeOperatorValue(saved.filetype, 'filetype'),
+        after: normalizeOperatorValue(saved.after, 'after'),
+        before: normalizeOperatorValue(saved.before, 'before')
+      };
+    }
+  } catch { operatorState = { site: '', filetype: '', after: '', before: '' }; }
+  document.getElementById('operatorSite').value = operatorState.site;
+  document.getElementById('operatorFiletype').value = operatorState.filetype;
+  document.getElementById('operatorAfter').value = operatorState.after;
+  document.getElementById('operatorBefore').value = operatorState.before;
+  updateOperatorSummary();
+}
+
+function setOperatorPanelOpen(open) {
+  const panel = document.getElementById('operatorPanel');
+  const toggle = document.getElementById('operatorToggle');
+  panel.hidden = !open;
+  toggle.setAttribute('aria-expanded', String(open));
+}
+
+function toggleOperatorPanel() {
+  const panel = document.getElementById('operatorPanel');
+  setOperatorPanelOpen(panel.hidden);
+}
+
+function clearOperators() {
+  operatorState = { site: '', filetype: '', after: '', before: '' };
+  document.getElementById('operatorSite').value = '';
+  document.getElementById('operatorFiletype').value = '';
+  document.getElementById('operatorAfter').value = '';
+  document.getElementById('operatorBefore').value = '';
+  persistOperatorState();
+  updateOperatorSummary();
+  showToast('Query operators cleared');
+}
+
 // Search — deduplicates URLs so the same page never opens twice
 function doSearch() {
   const query = document.getElementById('searchInput').value.trim();
@@ -1668,7 +1859,8 @@ function doSearch() {
   checkedEngines.forEach(id => {
     const eng = getEngineByID(id);
     if (!eng) return;
-    const full = eng.url + encodeURIComponent(query);
+    const engineQuery = buildEngineQuery(query, getCategoryForID(id), getOperatorValues());
+    const full = eng.url + encodeURIComponent(engineQuery);
     if (!seen.has(full)) { seen.add(full); urls.push(full); }
   });
 
@@ -1737,6 +1929,7 @@ function updateTabArrows() {
 buildUI();
 loadState();
 loadQueryHistory();
+loadOperatorState();
 
 // Init tab arrows after DOM built
 const tabsEl = document.getElementById('tabs');
@@ -1748,6 +1941,12 @@ document.getElementById('searchInput').addEventListener('keydown', e => { if (e.
 document.getElementById('searchBtn').addEventListener('click', doSearch);
 document.getElementById('historyToggle').addEventListener('click', toggleQueryHistory);
 document.getElementById('clearHistoryBtn').addEventListener('click', clearQueryHistory);
+document.getElementById('operatorToggle').addEventListener('click', toggleOperatorPanel);
+document.getElementById('clearOperatorsBtn').addEventListener('click', clearOperators);
+['operatorSite', 'operatorFiletype', 'operatorAfter', 'operatorBefore'].forEach(id => {
+  document.getElementById(id).addEventListener('input', saveOperatorState);
+  document.getElementById(id).addEventListener('change', saveOperatorState);
+});
 document.addEventListener('click', event => {
   if (!event.target.closest('.search-area') && !event.target.closest('.engine-history-btn')) setHistoryMenuOpen(false);
 });

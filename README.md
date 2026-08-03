@@ -46,6 +46,7 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 | Popup Block Detection | Toast notification when tabs are blocked, with guidance |
 | Persistent Selections | localStorage saves your engine picks across sessions |
 | Query History | Last 50 searches plus per-engine recent query lists, stored locally |
+| Query Operators | Optional site, file type, and date filters applied by matching category |
 | State Validation | Stale/broken saved state is silently discarded on load |
 | Dark Theme | Deep purple accent glassmorphism UI — no light mode |
 | Responsive | Adapts to mobile with 2-column grid and compact tabs |
@@ -100,6 +101,8 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 **Persistence:** Your selections save to `localStorage` automatically. Clearing browser data resets them.
 
 **Query history:** Click **History** below the search box to reuse one of your last 50 searches, or click the clock on an engine card to see queries used with that engine. Use **Clear all** to remove both lists from local storage.
+
+**Query operators:** Open **Operators** to add a site, file type, or date range. SearchHub applies each filter only to compatible categories and leaves existing operators in your query untouched.
 
 ## Hosting
 
