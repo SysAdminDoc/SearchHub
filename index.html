@@ -242,6 +242,29 @@
   .split-count-wrap[hidden] { display: none; }
   .split-count { padding: 3px 5px; color: var(--text-primary); background: var(--bg-input); border: 1px solid var(--border); border-radius: 5px; font: inherit; font-size: 11px; outline: none; }
 
+  .focused-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font: inherit;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .focused-toggle:hover,
+  .focused-toggle[aria-pressed="true"] {
+    color: var(--text-primary);
+    background: var(--bg-card);
+    border-color: var(--border);
+  }
+
+  .focused-toggle svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
   .split-overlay {
     position: fixed;
     inset: 0;
@@ -764,6 +787,10 @@
           <span>Split view</span>
         </button>
         <label class="split-count-wrap" id="splitCountWrap" hidden><span>Show</span><select class="split-count" id="splitCount" aria-label="Number of split view engines"><option value="2">2</option><option value="3">3</option><option value="4" selected>4</option></select></label>
+        <button class="focused-toggle" id="focusedToggle" type="button" aria-pressed="false" title="Reuse the most recently opened search tab">
+          <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><polyline points="8 12 11 15 16 9"/></svg>
+          <span>Focused tab</span>
+        </button>
         <span class="popup-hint" title="Allow popups in your browser to open multiple tabs">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
           <span>Allow popups for multi-tab</span>
@@ -1503,10 +1530,13 @@ const SITE_OPERATOR_CATEGORIES = new Set(['Web Search']);
 const FILETYPE_OPERATOR_CATEGORIES = new Set(['Academic', 'Reference', 'Code & Dev', 'Learning', 'Legal & Gov', 'Science', 'Downloads']);
 const DATE_OPERATOR_CATEGORIES = new Set(['News']);
 const SPLIT_ENGINE_LIMIT = 4;
+const FOCUSED_TAB_STORAGE_KEY = 'searchhub_focused_tab_v1';
 let queryHistory = [];
 let engineQueryHistory = {};
 let operatorState = { site: '', filetype: '', after: '', before: '' };
 let splitViewEnabled = false;
+let focusedTabEnabled = false;
+let lastOpenedTab = null;
 let historyScope = { engineId: null };
 
 function normalizeHistoryEntries(value, limit) {
@@ -1574,6 +1604,10 @@ function limitSplitTargets(targets, limit) {
   const requested = Number.parseInt(limit, 10);
   const count = Number.isFinite(requested) ? Math.min(Math.max(requested, 1), SPLIT_ENGINE_LIMIT) : SPLIT_ENGINE_LIMIT;
   return Array.isArray(targets) ? targets.slice(0, count) : [];
+}
+
+function isReusableTab(tab) {
+  try { return Boolean(tab && !tab.closed); } catch { return false; }
 }
 
 function getFavicon(url) {
@@ -1960,6 +1994,7 @@ function toggleSplitView() {
 
 function openTargetInTab(url) {
   const opened = window.open(url, '_blank');
+  if (opened) lastOpenedTab = opened;
   if (!opened) showToast('Popup blocked \u2014 allow popups for this site.');
 }
 
@@ -2014,6 +2049,40 @@ function closeSplitView() {
   document.body.classList.remove('split-open');
 }
 
+function updateFocusedTabButton() {
+  document.getElementById('focusedToggle').setAttribute('aria-pressed', String(focusedTabEnabled));
+}
+
+function setFocusedTabEnabled(enabled) {
+  focusedTabEnabled = Boolean(enabled);
+  updateFocusedTabButton();
+  try { localStorage.setItem(FOCUSED_TAB_STORAGE_KEY, String(focusedTabEnabled)); } catch {}
+}
+
+function toggleFocusedTab() {
+  setFocusedTabEnabled(!focusedTabEnabled);
+}
+
+function loadFocusedTabState() {
+  try { focusedTabEnabled = localStorage.getItem(FOCUSED_TAB_STORAGE_KEY) === 'true'; } catch { focusedTabEnabled = false; }
+  updateFocusedTabButton();
+}
+
+function sendToFocusedTab(url) {
+  if (isReusableTab(lastOpenedTab)) {
+    try {
+      lastOpenedTab.location.href = url;
+      return 'reused';
+    } catch { lastOpenedTab = null; }
+  }
+  const opened = window.open(url, '_blank');
+  if (opened) {
+    lastOpenedTab = opened;
+    return 'opened';
+  }
+  return 'blocked';
+}
+
 // Search — deduplicates URLs so the same page never opens twice
 function doSearch() {
   const query = document.getElementById('searchInput').value.trim();
@@ -2037,16 +2106,23 @@ function doSearch() {
     openSplitView(targets);
     return;
   }
+  if (focusedTabEnabled) {
+    const action = sendToFocusedTab(urls[0]);
+    if (action === 'reused') showToast('Updated focused tab');
+    else if (action === 'opened') showToast('Opened search in a new tab');
+    else showToast('Popup blocked \u2014 allow popups for this site.');
+    return;
+  }
   let launched = 0, blocked = 0;
 
   const first = window.open(urls[0], '_blank');
-  if (first) launched++; else blocked++;
+  if (first) { lastOpenedTab = first; launched++; } else blocked++;
 
   if (urls.length > 1) {
     urls.slice(1).forEach((url, i) => {
       setTimeout(() => {
         const w = window.open(url, '_blank');
-        if (w) launched++; else blocked++;
+        if (w) { lastOpenedTab = w; launched++; } else blocked++;
         if (i === urls.length - 2) {
           setTimeout(() => {
             if (blocked > 0) showToast(`Opened ${launched} tab${launched!==1?'s':''}. ${blocked} blocked \u2014 allow popups for this site.`);
@@ -2101,6 +2177,7 @@ buildUI();
 loadState();
 loadQueryHistory();
 loadOperatorState();
+loadFocusedTabState();
 
 // Init tab arrows after DOM built
 const tabsEl = document.getElementById('tabs');
@@ -2116,6 +2193,7 @@ document.getElementById('operatorToggle').addEventListener('click', toggleOperat
 document.getElementById('clearOperatorsBtn').addEventListener('click', clearOperators);
 document.getElementById('splitToggle').addEventListener('click', toggleSplitView);
 document.getElementById('splitClose').addEventListener('click', closeSplitView);
+document.getElementById('focusedToggle').addEventListener('click', toggleFocusedTab);
 ['operatorSite', 'operatorFiletype', 'operatorAfter', 'operatorBefore'].forEach(id => {
   document.getElementById(id).addEventListener('input', saveOperatorState);
   document.getElementById(id).addEventListener('change', saveOperatorState);
