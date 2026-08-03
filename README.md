@@ -4,9 +4,9 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Any%20Browser-4285F4)
 ![No Backend](https://img.shields.io/badge/backend-none-lightgrey)
-![Engines](https://img.shields.io/badge/engines-544-6c6cff)
+![Engines](https://img.shields.io/badge/engines-549-6c6cff)
 
-> Search 544 engines across 30 categories from a single page.
+> Search 549 engines across 31 categories from a single page.
 
 ## Quick Start
 
@@ -37,10 +37,10 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 
 | Feature | Description |
 |---------|-------------|
-| 544 Engines | Deduplicated across 30 categories — no URL opens twice |
+| 549 Engines | Deduplicated across 31 categories — no URL opens twice |
 | Selected Engines Bar | Persistent chip bar showing all selections with one-click removal |
 | Per-Category Filter | Type to narrow engines within any category tab |
-| Tab Scroll Arrows | Left/right arrows with edge fades for navigating all 30 categories |
+| Tab Scroll Arrows | Left/right arrows with edge fades for navigating all 31 categories |
 | Tab Selection Badges | Dot indicators on category tabs that contain selected engines |
 | Staggered Tab Opening | 150ms delay between tabs to bypass popup blockers |
 | Popup Block Detection | Toast notification when tabs are blocked, with guidance |
@@ -77,6 +77,7 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 | Code & Dev | 25 | GitHub, GitLab, Stack Overflow, npm, PyPI, Docker Hub, MDN |
 | Reference | 21 | Wikipedia, Wolfram Alpha, Internet Archive, Wayback Machine, Britannica |
 | OSINT & Threat Intel | 6 | VirusTotal, URLScan, Shodan, Censys, AbuseIPDB, urlhaus |
+| Torrents & Archives | 5 | 1337x, Nyaa, Anna's Archive, Archive.org, Library Genesis |
 | AI Search | 11 | Perplexity, ChatGPT, Gemini, Copilot, Phind, DeepSeek, Grok |
 | Travel | 21 | Google Flights, Skyscanner, Booking.com, Airbnb, Tripadvisor |
 | Jobs | 17 | Indeed, LinkedIn Jobs, Glassdoor, ZipRecruiter, Remote OK |

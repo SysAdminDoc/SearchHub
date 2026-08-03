@@ -1403,6 +1403,15 @@ let ENGINE_DATA = {
       { name: "urlhaus", url: "https://urlhaus.abuse.ch/browse.php?search={q|urlencode}", desc: "Malicious URL intelligence" },
     ]
   },
+  "Torrents & Archives": {
+    engines: [
+      { name: "1337x", url: "https://1337x.to/search/{q|urlencode}/1/", desc: "Torrent index" },
+      { name: "Nyaa", url: "https://nyaa.si/?f=0&c=0_0&q={q|urlencode}", desc: "Anime torrent index" },
+      { name: "Anna's Archive", url: "https://annas-archive.org/search?q={q|urlencode}", desc: "Open library catalog" },
+      { name: "Archive.org", url: "https://archive.org/search?query={q|urlencode}", desc: "Digital preservation archive" },
+      { name: "Library Genesis", url: "https://libgen.li/index.php?req={q|urlencode}", desc: "Library metadata search" },
+    ]
+  },
   "AI Search": {
     engines: [
       { name: "Perplexity", url: "https://www.perplexity.ai/search?q=", desc: "AI answer engine" },
