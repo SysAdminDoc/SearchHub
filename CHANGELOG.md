@@ -12,6 +12,7 @@ All notable changes to SearchHub will be documented in this file.
 - Added: Query URL templates with raw, uppercase, and URL-encoded query placeholders.
 - Added: Local engine editor overlay for adding, removing, reordering, and resetting engines.
 - Added: Versioned JSON import/export for sharing curated engine catalogs.
+- Added: Opt-in engine health badges with CORS-safe status classification.
 
 ## [v0.1.1] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
 

@@ -52,6 +52,7 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 | Keyboard Shortcuts | `/` focuses search, `1–9`/`0` switch category tabs, `Ctrl+Enter` searches |
 | Engine Editor | Add, remove, reorder, and reset engines through a localStorage overlay |
 | JSON Engine Sharing | Export the active catalog or import a validated catalog into matching categories |
+| Engine Health | Opt-in per-engine or per-category HEAD checks with healthy, warning, dead, and unknown states |
 | State Validation | Stale/broken saved state is silently discarded on load |
 | Dark Theme | Deep purple accent glassmorphism UI — no light mode |
 | Responsive | Adapts to mobile with 2-column grid and compact tabs |
@@ -118,6 +119,8 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 **Engine editor:** Open **Manage** to customize a category. Additions, removals, and ordering changes stay local to this browser; **Reset category** restores the bundled defaults.
 
 **Engine sharing:** Use **Export JSON** in the editor to save the active catalog, then **Import JSON** on another SearchHub copy. Imports are version-checked, deduplicated, and limited to existing categories.
+
+**Engine health:** Click an engine's `?` badge or a category's **Check health** button. CORS-readable responses are classified directly; opaque no-CORS fallbacks stay **unknown** rather than being overstated.
 
 ## Hosting
 

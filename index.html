@@ -756,6 +756,35 @@
   .engine-history-btn:hover { background: var(--accent-subtle); border-color: rgba(108,108,255,0.2); }
   .engine-history-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
+  .engine-health-badge {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+    padding: 0;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    opacity: 0.65;
+    transition: all 0.15s ease;
+  }
+
+  .engine-health-badge:hover { opacity: 1; border-color: var(--text-muted); }
+  .engine-health-badge.healthy { color: #86efac; border-color: rgba(134,239,172,0.35); }
+  .engine-health-badge.warning { color: #fcd34d; border-color: rgba(252,211,77,0.35); }
+  .engine-health-badge.dead { color: var(--rose); border-color: rgba(251,113,133,0.35); }
+  .engine-health-badge.pending { color: var(--accent); border-color: rgba(108,108,255,0.35); animation: healthPulse 1s ease-in-out infinite; }
+  @keyframes healthPulse { 50% { opacity: 0.35; } }
+
   .engine-name {
     font-size: 13px;
     font-weight: 500;
@@ -1646,6 +1675,7 @@ const ENGINE_HISTORY_KEY = 'searchhub_engine_history_v1';
 const QUERY_HISTORY_LIMIT = 50;
 const ENGINE_HISTORY_LIMIT = 10;
 const MAX_QUERY_LENGTH = 500;
+const ENGINE_HEALTH_STORAGE_KEY = 'searchhub_engine_health_v1';
 const OPERATOR_STORAGE_KEY = 'searchhub_query_operators_v1';
 const SITE_OPERATOR_CATEGORIES = new Set(['Web Search']);
 const FILETYPE_OPERATOR_CATEGORIES = new Set(['Academic', 'Reference', 'Code & Dev', 'Learning', 'Legal & Gov', 'Science', 'Downloads']);
@@ -1654,6 +1684,7 @@ const SPLIT_ENGINE_LIMIT = 4;
 const FOCUSED_TAB_STORAGE_KEY = 'searchhub_focused_tab_v1';
 let queryHistory = [];
 let engineQueryHistory = {};
+let engineHealthState = {};
 let operatorState = { site: '', filetype: '', after: '', before: '' };
 let splitViewEnabled = false;
 let focusedTabEnabled = false;
@@ -1744,6 +1775,14 @@ function limitSplitTargets(targets, limit) {
 
 function isReusableTab(tab) {
   try { return Boolean(tab && !tab.closed); } catch { return false; }
+}
+
+function classifyHealthStatus(status) {
+  const code = Number(status);
+  if (!Number.isFinite(code)) return 'unknown';
+  if (code >= 200 && code < 400) return 'healthy';
+  if ([401, 403, 405, 408, 409, 429, 451].includes(code)) return 'warning';
+  return 'dead';
 }
 
 function getCategoryHotkeyIndex(key) {
@@ -1860,6 +1899,7 @@ function buildUI() {
           <input type="text" class="filter-input" placeholder="Filter..." oninput="filterEngines(this,'${ci}')">
           <button class="panel-btn" onclick="selectAll('${cat}')">Select all</button>
           <button class="panel-btn" onclick="selectNone('${cat}')">Clear</button>
+          <button class="panel-btn" onclick="checkCategoryHealth('${cat}')">Check health</button>
         </div>
       </div>
       <div class="engine-grid" id="grid-${ci}"></div>
@@ -1883,11 +1923,16 @@ function buildUI() {
           <div class="engine-name">${eng.name}</div>
           <div class="engine-desc">${eng.desc}</div>
         </div>
+        <button class="engine-health-badge unknown" type="button" title="Check engine health" aria-label="Check health for ${eng.name}">?</button>
         <button class="engine-history-btn" type="button" title="Recent queries for ${eng.name}" aria-label="Recent queries for ${eng.name}"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 9 8 9"/><path d="M12 7v5l3 2"/></svg></button>
       `;
       item.querySelector('.engine-history-btn').addEventListener('click', event => {
         event.stopPropagation();
         openHistoryForEngine(id);
+      });
+      item.querySelector('.engine-health-badge').addEventListener('click', event => {
+        event.stopPropagation();
+        checkEngineHealth(id);
       });
       grid.appendChild(item);
     });
@@ -2057,6 +2102,98 @@ function loadQueryHistory() {
     }
   } catch { engineQueryHistory = {}; }
   updateEngineHistoryIndicators();
+}
+
+function normalizeHealthState(value) {
+  const state = {};
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return state;
+  Object.keys(value).forEach(key => {
+    const record = value[key];
+    if (!record || !['unknown', 'pending', 'healthy', 'warning', 'dead'].includes(record.status)) return;
+    state[key] = {
+      status: record.status,
+      checkedAt: Number.isFinite(Number(record.checkedAt)) ? Number(record.checkedAt) : 0,
+      latency: Number.isFinite(Number(record.latency)) ? Number(record.latency) : 0
+    };
+  });
+  return state;
+}
+
+function getEngineHealthRecord(id) {
+  return engineHealthState[getEngineHistoryKey(id)] || { status: 'unknown', checkedAt: 0, latency: 0 };
+}
+
+function updateHealthBadges() {
+  const labels = { unknown: '?', pending: '...', healthy: '\u2713', warning: '!', dead: '\u00d7' };
+  const descriptions = {
+    unknown: 'Not checked or blocked by CORS',
+    pending: 'Health check in progress',
+    healthy: 'Responded successfully',
+    warning: 'Responded but may block automated checks',
+    dead: 'Returned an unavailable response or failed'
+  };
+  document.querySelectorAll('.engine-item').forEach(item => {
+    const badge = item.querySelector('.engine-health-badge');
+    if (!badge) return;
+    const record = getEngineHealthRecord(item.dataset.id);
+    badge.className = 'engine-health-badge ' + record.status;
+    badge.textContent = labels[record.status];
+    badge.title = descriptions[record.status] + '. Click to retry.';
+    badge.setAttribute('aria-label', descriptions[record.status] + ' for ' + (getEngineByID(item.dataset.id)?.name || 'this engine'));
+  });
+}
+
+function persistEngineHealth() {
+  try { localStorage.setItem(ENGINE_HEALTH_STORAGE_KEY, JSON.stringify(engineHealthState)); } catch {}
+}
+
+function setEngineHealth(id, status, latency) {
+  engineHealthState[getEngineHistoryKey(id)] = { status, checkedAt: Date.now(), latency: latency || 0 };
+  persistEngineHealth();
+  updateHealthBadges();
+}
+
+async function checkEngineHealth(id) {
+  const engine = getEngineByID(id);
+  if (!engine) return;
+  const key = getEngineHistoryKey(id);
+  engineHealthState[key] = { status: 'pending', checkedAt: 0, latency: 0 };
+  updateHealthBadges();
+  const requestUrl = buildEngineURL(engine, 'health-check');
+  const started = Date.now();
+  let status = 'unknown';
+  if (typeof fetch === 'function') {
+    let controller = null;
+    let timer = null;
+    try {
+      controller = typeof AbortController === 'function' ? new AbortController() : null;
+      if (controller) timer = setTimeout(() => controller.abort(), 7000);
+      const response = await fetch(requestUrl, { method: 'HEAD', mode: 'cors', cache: 'no-store', signal: controller?.signal });
+      status = classifyHealthStatus(response.status);
+    } catch {
+      try {
+        await fetch(requestUrl, { method: 'HEAD', mode: 'no-cors', cache: 'no-store' });
+        status = 'unknown';
+      } catch { status = 'dead'; }
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  }
+  setEngineHealth(id, status, Date.now() - started);
+}
+
+async function checkCategoryHealth(category) {
+  const panel = Array.from(document.querySelectorAll('.panel')).find(candidate => candidate.dataset.cat === category);
+  const button = panel?.querySelector('.panel-controls .panel-btn:last-child');
+  const ids = Array.from(document.querySelectorAll('.engine-item')).filter(item => item.dataset.cat === category).map(item => item.dataset.id);
+  if (button) { button.disabled = true; button.textContent = 'Checking...'; }
+  await Promise.all(ids.map(id => checkEngineHealth(id)));
+  if (button) { button.disabled = false; button.textContent = 'Check health'; }
+}
+
+function loadEngineHealth() {
+  try { engineHealthState = normalizeHealthState(JSON.parse(localStorage.getItem(ENGINE_HEALTH_STORAGE_KEY))); } catch { engineHealthState = {}; }
+  updateHealthBadges();
 }
 
 const ENGINE_OVERLAY_KEY = 'searchhub_engine_overlay_v1';
@@ -2647,6 +2784,7 @@ loadState();
 loadQueryHistory();
 loadOperatorState();
 loadFocusedTabState();
+loadEngineHealth();
 
 // Init tab arrows after DOM built
 const tabsEl = document.getElementById('tabs');
