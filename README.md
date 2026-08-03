@@ -4,9 +4,9 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Any%20Browser-4285F4)
 ![No Backend](https://img.shields.io/badge/backend-none-lightgrey)
-![Engines](https://img.shields.io/badge/engines-549-6c6cff)
+![Engines](https://img.shields.io/badge/engines-552-6c6cff)
 
-> Search 549 engines across 31 categories from a single page.
+> Search 552 engines across 31 categories from a single page.
 
 ## Quick Start
 
@@ -37,7 +37,7 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 
 | Feature | Description |
 |---------|-------------|
-| 549 Engines | Deduplicated across 31 categories — no URL opens twice |
+| 552 Engines | Deduplicated across 31 categories — no URL opens twice |
 | Selected Engines Bar | Persistent chip bar showing all selections with one-click removal |
 | Per-Category Filter | Type to narrow engines within any category tab |
 | Tab Scroll Arrows | Left/right arrows with edge fades for navigating all 31 categories |
@@ -78,7 +78,7 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 | Reference | 21 | Wikipedia, Wolfram Alpha, Internet Archive, Wayback Machine, Britannica |
 | OSINT & Threat Intel | 6 | VirusTotal, URLScan, Shodan, Censys, AbuseIPDB, urlhaus |
 | Torrents & Archives | 5 | 1337x, Nyaa, Anna's Archive, Archive.org, Library Genesis |
-| AI Search | 11 | Perplexity, ChatGPT, Gemini, Copilot, Phind, DeepSeek, Grok |
+| AI Search | 14 | Perplexity, ChatGPT, Gemini, Civitai, Replicate, Hugging Face Spaces |
 | Travel | 21 | Google Flights, Skyscanner, Booking.com, Airbnb, Tripadvisor |
 | Jobs | 17 | Indeed, LinkedIn Jobs, Glassdoor, ZipRecruiter, Remote OK |
 | Food & Recipes | 13 | DoorDash, Uber Eats, Allrecipes, Serious Eats, OpenTable |

@@ -19,7 +19,7 @@ vm.runInNewContext(
 const { ENGINE_DATA, ENGINE_PRESETS, resolvePresetEngines } = context.__presets;
 const resolve = (dataSet, preset) => JSON.parse(JSON.stringify(resolvePresetEngines(dataSet, preset)));
 assert.equal(resolve(ENGINE_DATA, 'privacy').length, 8);
-assert.equal(resolve(ENGINE_DATA, 'ai').length, 11);
+assert.equal(resolve(ENGINE_DATA, 'ai').length, 14);
 assert.equal(resolve(ENGINE_DATA, 'academic').length, 9);
 assert.equal(resolve(ENGINE_DATA, 'osint').length, 23);
 const data = {

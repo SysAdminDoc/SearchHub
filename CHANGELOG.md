@@ -18,6 +18,7 @@ All notable changes to SearchHub will be documented in this file.
 - Added: OSINT & Threat Intel category with VirusTotal, URLScan, Shodan, Censys, AbuseIPDB, and urlhaus.
 - Added: Torrents & Archives category with 1337x, Nyaa, Anna's Archive, Archive.org, and Library Genesis.
 - Added: Deep Maps entries for parcel lookup, county GIS, flight tracking, vessel tracking, and infrastructure maps.
+- Added: AI image and video discovery entries for Civitai, Replicate, and Hugging Face Spaces.
 
 ## [v0.1.1] - %Y->- (HEAD -> main, origin/main, origin/HEAD)
 

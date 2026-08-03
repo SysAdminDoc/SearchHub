@@ -1430,6 +1430,9 @@ let ENGINE_DATA = {
       { name: "iAsk", url: "https://iask.ai/?mode=question&q=", desc: "Free AI answers" },
       { name: "Andi", url: "https://andisearch.com/search?q=", desc: "Visual AI search" },
       { name: "Globe Explorer", url: "https://explorer.globe.engineer/?q=", desc: "AI topic explorer" },
+      { name: "Civitai", url: "https://civitai.com/search/models?query={q|urlencode}", desc: "Community image models" },
+      { name: "Replicate", url: "https://replicate.com/search?query={q|urlencode}", desc: "AI model and demo catalog" },
+      { name: "Hugging Face Spaces", url: "https://huggingface.co/spaces?search={q|urlencode}", desc: "Hosted ML demos" },
     ]
   },
   "Travel": {
@@ -1802,7 +1805,10 @@ const ENGINE_PRESETS = {
       ['AI Search', 'Grok'],
       ['AI Search', 'iAsk'],
       ['AI Search', 'Andi'],
-      ['AI Search', 'Globe Explorer']
+      ['AI Search', 'Globe Explorer'],
+      ['AI Search', 'Civitai'],
+      ['AI Search', 'Replicate'],
+      ['AI Search', 'Hugging Face Spaces']
     ]
   },
   academic: {
