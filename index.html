@@ -374,6 +374,25 @@
   .share-copy { flex-shrink: 0; padding: 8px 11px; color: #fff; background: var(--accent); border: 0; border-radius: 6px; font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
   .share-copy:hover { background: var(--accent-hover); }
   .share-help { margin: 8px 0 0; color: var(--text-muted); font-size: 10px; }
+  .lookup-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; color: var(--text-muted); background: transparent; border: 1px solid transparent; border-radius: 6px; font: inherit; cursor: pointer; transition: all 0.15s ease; }
+  .lookup-toggle:hover, .lookup-toggle[aria-expanded="true"] { color: var(--text-primary); background: var(--bg-card); border-color: var(--border); }
+  .lookup-toggle svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .reverse-lookup-menu[hidden] { display: none; }
+  .reverse-lookup-row { display: flex; gap: 7px; }
+  .reverse-lookup-input { min-width: 0; flex: 1; padding: 8px 9px; color: var(--text-primary); background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; font: inherit; font-size: 11px; outline: none; }
+  .reverse-lookup-input:focus { border-color: var(--border-focus); }
+  .reverse-lookup-input::placeholder { color: var(--text-muted); opacity: 0.75; }
+  .reverse-lookup-find { flex-shrink: 0; padding: 8px 11px; color: #fff; background: var(--accent); border: 0; border-radius: 6px; font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
+  .reverse-lookup-find:hover { background: var(--accent-hover); }
+  .reverse-lookup-results { display: grid; gap: 8px; margin-top: 10px; max-height: 280px; overflow-y: auto; }
+  .reverse-lookup-empty { color: var(--text-muted); font-size: 11px; }
+  .reverse-lookup-result { padding: 8px 9px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 7px; }
+  .reverse-lookup-result-header { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .reverse-lookup-result-name { color: var(--text-primary); font-size: 12px; font-weight: 600; }
+  .reverse-lookup-result-category { flex-shrink: 0; color: var(--text-muted); font-size: 10px; }
+  .reverse-lookup-detail { margin: 5px 0 0; color: var(--text-secondary); font-size: 10px; line-height: 1.35; overflow-wrap: anywhere; }
+  .reverse-lookup-detail-label { color: var(--text-muted); font-weight: 600; }
+  .reverse-lookup-detail code { color: var(--text-secondary); font: inherit; }
   .dedupe-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; color: var(--text-muted); background: transparent; border: 1px solid transparent; border-radius: 6px; font: inherit; cursor: pointer; transition: all 0.15s ease; }
   .dedupe-toggle:hover, .dedupe-toggle[aria-pressed="true"] { color: var(--text-primary); background: var(--bg-card); border-color: var(--border); }
   .dedupe-toggle svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
@@ -1168,6 +1187,10 @@
           <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>
           <span>Share</span>
         </button>
+        <button class="lookup-toggle" id="lookupToggle" type="button" aria-expanded="false" aria-controls="reverseLookupMenu" title="Find which SearchHub engine template matches a URL">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/><path d="M8 11h6M11 8v6"/></svg>
+          <span>Lookup</span>
+        </button>
         <button class="smart-toggle" id="smartToggle" type="button" title="Choose engines from the query context">
           <svg viewBox="0 0 24 24"><path d="m12 3 1.3 5.7L19 10l-5.7 1.3L12 17l-1.3-5.7L5 10l5.7-1.3L12 3z"/><path d="m19 16 .6 2.4L22 19l-2.4.6L19 22l-.6-2.4L16 19l2.4-.6L19 16z"/></svg>
           <span>Smart default</span>
@@ -1286,6 +1309,12 @@
       <div class="share-header"><span class="share-title">Share snapshot</span><button class="share-close" id="shareClose" type="button">Close</button></div>
       <div class="share-url-row"><input class="share-url-input" id="shareURLInput" type="url" readonly aria-label="Share URL"><button class="share-copy" id="shareCopy" type="button">Copy URL</button></div>
       <p class="share-help">The link includes the current query and selected engines. Opening it restores both.</p>
+    </div>
+    <div class="share-menu reverse-lookup-menu" id="reverseLookupMenu" hidden>
+      <div class="share-header"><span class="share-title">Reverse engine lookup</span><button class="share-close" id="reverseLookupClose" type="button">Close</button></div>
+      <div class="reverse-lookup-row"><input class="reverse-lookup-input" id="reverseLookupInput" type="text" placeholder="https://example.com/search?q=your+term" aria-label="URL to match" autocomplete="off" spellcheck="false"><button class="reverse-lookup-find" id="reverseLookupFind" type="button">Find matches</button></div>
+      <p class="share-help">Paste a URL generated by SearchHub to identify matching engine templates and recover its query.</p>
+      <div class="reverse-lookup-results" id="reverseLookupResults" aria-live="polite"></div>
     </div>
   </div>
 </div>
@@ -2447,6 +2476,65 @@ function buildEngineURL(engine, query) {
   return /\{q(?:\|(upper|urlencode))?\}/i.test(template) ? expandQueryTemplate(template, query) : template + encodeURIComponent(query);
 }
 
+function normalizeLookupURL(value) {
+  const input = typeof value === 'string' ? value.trim().slice(0, 4000) : '';
+  if (!input) return '';
+  try {
+    const parsed = new URL(input);
+    return /^https?:$/i.test(parsed.protocol) ? parsed.href : '';
+  } catch { return ''; }
+}
+
+function escapeLookupRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function decodeLookupQuery(value) {
+  try { return decodeURIComponent(value); } catch { return value; }
+}
+
+function matchEngineTemplateURL(template, target) {
+  if (typeof template !== 'string' || !template || typeof target !== 'string' || !target) return null;
+  const tokens = [...template.matchAll(/\{q(?:\|(upper|urlencode))?\}/gi)];
+  if (!tokens.length) {
+    if (target.slice(0, template.length).toLowerCase() !== template.toLowerCase()) return null;
+    const encodedQuery = target.slice(template.length);
+    if (!encodedQuery) return null;
+    const query = decodeLookupQuery(encodedQuery);
+    return query ? { query, mode: 'encoded-prefix' } : null;
+  }
+
+  let expression = '^';
+  let cursor = 0;
+  tokens.forEach(token => {
+    expression += escapeLookupRegExp(template.slice(cursor, token.index)) + '(.+?)';
+    cursor = token.index + token[0].length;
+  });
+  expression += escapeLookupRegExp(template.slice(cursor)) + '$';
+  const match = new RegExp(expression, 'i').exec(target);
+  if (!match) return null;
+  const captures = match.slice(1);
+  if (!captures.length || captures.some(capture => capture !== captures[0])) return null;
+  const query = decodeLookupQuery(captures[0]);
+  return query ? { query, mode: 'template' } : null;
+}
+
+function findMatchingEngines(value, data, limit = 50) {
+  const target = normalizeLookupURL(value);
+  if (!target) return [];
+  const requestedLimit = Number.parseInt(limit, 10);
+  const resultLimit = Number.isFinite(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 200) : 50;
+  const matches = [];
+  Object.keys(data || {}).forEach(category => {
+    (data[category]?.engines || []).forEach(engine => {
+      const match = matchEngineTemplateURL(engine.url, target);
+      if (!match) return;
+      matches.push({ category, name: engine.name, url: engine.url, query: match.query, mode: match.mode });
+    });
+  });
+  return matches.slice(0, resultLimit);
+}
+
 function limitSplitTargets(targets, limit) {
   const requested = Number.parseInt(limit, 10);
   const count = Number.isFinite(requested) ? Math.min(Math.max(requested, 1), SPLIT_ENGINE_LIMIT) : SPLIT_ENGINE_LIMIT;
@@ -3419,6 +3507,86 @@ function registerServiceWorker() {
   }
 }
 
+function setReverseLookupMenuOpen(open) {
+  const menu = document.getElementById('reverseLookupMenu');
+  const toggle = document.getElementById('lookupToggle');
+  menu.hidden = !open;
+  toggle.setAttribute('aria-expanded', String(open));
+}
+
+function toggleReverseLookupMenu() {
+  const menu = document.getElementById('reverseLookupMenu');
+  const open = menu.hidden;
+  setReverseLookupMenuOpen(open);
+  if (open) {
+    setHistoryMenuOpen(false);
+    setPresetMenuOpen(false);
+    setShareMenuOpen(false);
+    setOperatorPanelOpen(false);
+    document.getElementById('reverseLookupInput').focus();
+  }
+}
+
+function appendReverseLookupDetail(parent, label, value) {
+  const detail = document.createElement('div');
+  detail.className = 'reverse-lookup-detail';
+  const labelNode = document.createElement('span');
+  labelNode.className = 'reverse-lookup-detail-label';
+  labelNode.textContent = label + ': ';
+  const valueNode = document.createElement('code');
+  valueNode.textContent = value;
+  detail.append(labelNode, valueNode);
+  parent.appendChild(detail);
+}
+
+function renderReverseLookupResults(matches, message = '') {
+  const results = document.getElementById('reverseLookupResults');
+  results.textContent = '';
+  if (message) {
+    const empty = document.createElement('div');
+    empty.className = 'reverse-lookup-empty';
+    empty.textContent = message;
+    results.appendChild(empty);
+    return;
+  }
+  if (!matches.length) {
+    const empty = document.createElement('div');
+    empty.className = 'reverse-lookup-empty';
+    empty.textContent = 'No matching engine templates found.';
+    results.appendChild(empty);
+    return;
+  }
+  const summary = document.createElement('div');
+  summary.className = 'reverse-lookup-empty';
+  summary.textContent = matches.length + ' matching engine' + (matches.length === 1 ? '' : 's');
+  results.appendChild(summary);
+  matches.forEach(match => {
+    const result = document.createElement('div');
+    result.className = 'reverse-lookup-result';
+    const header = document.createElement('div');
+    header.className = 'reverse-lookup-result-header';
+    const name = document.createElement('span');
+    name.className = 'reverse-lookup-result-name';
+    name.textContent = match.name;
+    const category = document.createElement('span');
+    category.className = 'reverse-lookup-result-category';
+    category.textContent = match.category;
+    header.append(name, category);
+    result.appendChild(header);
+    appendReverseLookupDetail(result, 'Query', match.query);
+    appendReverseLookupDetail(result, 'Template', match.url);
+    results.appendChild(result);
+  });
+}
+
+function runReverseEngineLookup() {
+  const input = document.getElementById('reverseLookupInput');
+  const value = input.value.trim();
+  if (!value) { renderReverseLookupResults([], 'Paste an http(s) URL to search the catalog.'); return; }
+  if (!normalizeLookupURL(value)) { renderReverseLookupResults([], 'Use a valid http(s) URL.'); return; }
+  renderReverseLookupResults(findMatchingEngines(value, ENGINE_DATA));
+}
+
 function setShareMenuOpen(open) {
   const menu = document.getElementById('shareMenu');
   const toggle = document.getElementById('shareToggle');
@@ -3435,6 +3603,7 @@ function openShareMenu() {
   setShareMenuOpen(true);
   setHistoryMenuOpen(false);
   setPresetMenuOpen(false);
+  setReverseLookupMenuOpen(false);
   setOperatorPanelOpen(false);
 }
 
@@ -3812,6 +3981,12 @@ document.getElementById('historyToggle').addEventListener('click', toggleQueryHi
 document.getElementById('shareToggle').addEventListener('click', openShareMenu);
 document.getElementById('shareClose').addEventListener('click', closeShareMenu);
 document.getElementById('shareCopy').addEventListener('click', copyShareURL);
+document.getElementById('lookupToggle').addEventListener('click', toggleReverseLookupMenu);
+document.getElementById('reverseLookupClose').addEventListener('click', () => setReverseLookupMenuOpen(false));
+document.getElementById('reverseLookupFind').addEventListener('click', runReverseEngineLookup);
+document.getElementById('reverseLookupInput').addEventListener('keydown', event => {
+  if (event.key === 'Enter') { event.preventDefault(); runReverseEngineLookup(); }
+});
 document.getElementById('smartToggle').addEventListener('click', applySmartDefaults);
 document.getElementById('sessionExportToggle').addEventListener('click', exportSearchSession);
 document.getElementById('clearHistoryBtn').addEventListener('click', clearQueryHistory);
@@ -3848,6 +4023,7 @@ document.addEventListener('click', event => {
     setHistoryMenuOpen(false);
     setPresetMenuOpen(false);
     setShareMenuOpen(false);
+    setReverseLookupMenuOpen(false);
   }
 });
 document.addEventListener('keydown', event => {
@@ -3855,6 +4031,7 @@ document.addEventListener('keydown', event => {
   if (event.key === 'Escape' && !document.getElementById('engineEditorOverlay').hidden) closeEngineEditor();
   if (event.key === 'Escape' && !document.getElementById('presetMenu').hidden) setPresetMenuOpen(false);
   if (event.key === 'Escape' && !document.getElementById('shareMenu').hidden) setShareMenuOpen(false);
+  if (event.key === 'Escape' && !document.getElementById('reverseLookupMenu').hidden) setReverseLookupMenuOpen(false);
   if (event.key === 'Enter' && event.ctrlKey && !event.altKey && !event.metaKey) {
     event.preventDefault();
     doSearch();
