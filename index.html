@@ -265,6 +265,23 @@
 
   .focused-toggle svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
+  .engine-editor-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font: inherit;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .engine-editor-toggle:hover { color: var(--text-primary); background: var(--bg-card); border-color: var(--border); }
+  .engine-editor-toggle svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
   .split-overlay {
     position: fixed;
     inset: 0;
@@ -307,6 +324,52 @@
   .split-tile-frame { height: 330px; background: #fff; border-top: 1px solid var(--glass-border); }
   .split-tile-frame iframe { width: 100%; height: 100%; display: block; border: 0; background: #fff; }
   .split-tile-note { padding: 5px 10px; color: var(--text-muted); font-size: 10px; border-top: 1px solid var(--glass-border); }
+
+  .editor-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 910;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(5, 5, 10, 0.82);
+    backdrop-filter: blur(12px);
+  }
+
+  .editor-overlay[hidden] { display: none; }
+  .editor-dialog { display: flex; flex-direction: column; width: min(900px, 100%); max-height: 100%; overflow: hidden; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 24px 80px rgba(0,0,0,0.55); }
+  .editor-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 16px; border-bottom: 1px solid var(--glass-border); }
+  .editor-title { color: var(--text-primary); font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; }
+  .editor-subtitle { margin-top: 2px; color: var(--text-muted); font-size: 11px; }
+  .editor-close { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--text-muted); background: transparent; border: 1px solid transparent; border-radius: 7px; cursor: pointer; }
+  .editor-close:hover { color: var(--text-primary); background: var(--bg-card-hover); border-color: var(--border); }
+  .editor-close svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+  .editor-body { overflow: auto; padding: 14px 16px 18px; }
+  .editor-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+  .editor-category-label { display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; }
+  .editor-category { min-width: 190px; padding: 7px 9px; color: var(--text-primary); background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; font: inherit; font-size: 12px; outline: none; }
+  .editor-count { color: var(--text-muted); font-size: 11px; }
+  .editor-engine-list { display: grid; gap: 6px; max-height: 360px; overflow: auto; padding-right: 2px; }
+  .editor-engine-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--bg-card); border: 1px solid transparent; border-radius: 7px; }
+  .editor-engine-row:hover { border-color: var(--border); }
+  .editor-engine-details { min-width: 0; flex: 1; }
+  .editor-engine-name { overflow: hidden; color: var(--text-primary); font-size: 12px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+  .editor-engine-url { overflow: hidden; margin-top: 2px; color: var(--text-muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+  .editor-engine-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .editor-action { min-width: 25px; height: 25px; padding: 0 6px; color: var(--text-muted); background: transparent; border: 1px solid var(--border); border-radius: 5px; font: inherit; font-size: 11px; cursor: pointer; }
+  .editor-action:hover:not(:disabled) { color: var(--text-primary); background: var(--bg-card-hover); }
+  .editor-action:disabled { cursor: default; opacity: 0.3; }
+  .editor-action.remove { color: var(--rose); }
+  .editor-add-form { display: grid; grid-template-columns: 1fr 1.5fr 1fr auto; gap: 7px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--glass-border); }
+  .editor-input { min-width: 0; padding: 8px 9px; color: var(--text-primary); background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; font: inherit; font-size: 11px; outline: none; }
+  .editor-input:focus, .editor-category:focus { border-color: var(--border-focus); }
+  .editor-add-button { padding: 8px 12px; color: #fff; background: var(--accent); border: 0; border-radius: 6px; font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
+  .editor-add-button:hover { background: #7a7aff; }
+  .editor-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
+  .editor-reset { padding: 6px 9px; color: var(--rose); background: transparent; border: 1px solid rgba(251,113,133,0.25); border-radius: 6px; font: inherit; font-size: 11px; cursor: pointer; }
+  .editor-reset:hover { background: rgba(251,113,133,0.08); }
+  .editor-note { color: var(--text-muted); font-size: 10px; line-height: 1.4; text-align: right; }
 
   .query-history-menu {
     max-width: 680px;
@@ -752,6 +815,10 @@
     .split-overlay { padding: 10px; }
     .split-grid { grid-template-columns: 1fr; }
     .split-tile-frame { height: 260px; }
+    .editor-overlay { padding: 10px; }
+    .editor-add-form { grid-template-columns: 1fr 1fr; }
+    .editor-add-button { grid-column: span 2; }
+    .editor-toolbar { align-items: flex-start; flex-direction: column; }
     .panel-header { flex-direction: column; align-items: flex-start; }
   }
 </style>
@@ -790,6 +857,10 @@
         <button class="focused-toggle" id="focusedToggle" type="button" aria-pressed="false" title="Reuse the most recently opened search tab">
           <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><polyline points="8 12 11 15 16 9"/></svg>
           <span>Focused tab</span>
+        </button>
+        <button class="engine-editor-toggle" id="engineEditorToggle" type="button">
+          <svg viewBox="0 0 24 24"><path d="M12 3a2 2 0 0 1 2 2v1.1a7.9 7.9 0 0 1 1.8 1l.9-.5a2 2 0 1 1 2 3.5l-.9.5a8 8 0 0 1 0 2l.9.5a2 2 0 1 1-2 3.5l-.9-.5a7.9 7.9 0 0 1-1.8 1V19a2 2 0 1 1-4 0v-1.1a7.9 7.9 0 0 1-1.8-1l-.9.5a2 2 0 1 1-2-3.5l.9-.5a8 8 0 0 1 0-2l-.9-.5a2 2 0 1 1 2-3.5l.9.5a7.9 7.9 0 0 1 1.8-1V5a2 2 0 0 1 2-2z"/><circle cx="12" cy="12" r="2.5"/></svg>
+          <span>Manage</span>
         </button>
         <span class="popup-hint" title="Allow popups in your browser to open multiple tabs">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
@@ -860,8 +931,37 @@
   </div>
 </div>
 
+<div class="editor-overlay" id="engineEditorOverlay" hidden>
+  <div class="editor-dialog" role="dialog" aria-modal="false" aria-labelledby="engineEditorTitle">
+    <div class="editor-header">
+      <div>
+        <div class="editor-title" id="engineEditorTitle">Engine editor</div>
+        <div class="editor-subtitle">Customize the local overlay without changing bundled defaults.</div>
+      </div>
+      <button class="editor-close" id="engineEditorClose" type="button" aria-label="Close engine editor"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="editor-body">
+      <div class="editor-toolbar">
+        <label class="editor-category-label">Category <select class="editor-category" id="editorCategory"></select></label>
+        <span class="editor-count" id="editorCount"></span>
+      </div>
+      <div class="editor-engine-list" id="editorEngineList"></div>
+      <form class="editor-add-form" id="editorAddForm">
+        <input class="editor-input" id="editorName" type="text" placeholder="Engine name" maxlength="80" required>
+        <input class="editor-input" id="editorUrl" type="url" placeholder="https://example.com/search?q=" maxlength="500" required>
+        <input class="editor-input" id="editorDesc" type="text" placeholder="Short description" maxlength="160">
+        <button class="editor-add-button" type="submit">Add engine</button>
+      </form>
+      <div class="editor-footer">
+        <button class="editor-reset" id="editorResetCategory" type="button">Reset category</button>
+        <span class="editor-note">Changes stay in this browser's local storage and can be reset at any time.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
-const ENGINE_DATA = {
+let ENGINE_DATA = {
   "Web Search": {
     engines: [
       { name: "Google", url: "https://www.google.com/search?q=", desc: "World's most popular" },
@@ -1517,6 +1617,19 @@ const ENGINE_DATA = {
     ]
   },
 };
+
+function cloneEngineData(data) {
+  const clone = {};
+  Object.keys(data).forEach(category => {
+    clone[category] = {
+      ...data[category],
+      engines: data[category].engines.map(engine => ({ ...engine }))
+    };
+  });
+  return clone;
+}
+
+const DEFAULT_ENGINE_DATA = cloneEngineData(ENGINE_DATA);
 // State
 let checkedEngines = new Set();
 const faviconCache = {};
@@ -1656,6 +1769,12 @@ function getEngineByID(id) {
 
 function getCategoryForID(id) {
   return Object.keys(ENGINE_DATA)[parseInt(id.split('-')[0])];
+}
+
+function getEngineHistoryKey(id) {
+  const engine = getEngineByID(id);
+  const category = getCategoryForID(id);
+  return engine && category ? category + '::' + engine.url : id;
 }
 
 function updateCount() {
@@ -1814,7 +1933,7 @@ function filterEngines(input, ci) {
 }
 
 function getEngineHistory(id) {
-  return engineQueryHistory[id] || [];
+  return engineQueryHistory[getEngineHistoryKey(id)] || engineQueryHistory[id] || [];
 }
 
 function updateEngineHistoryIndicators() {
@@ -1901,7 +2020,7 @@ function recordQueryHistory(query, ids) {
   queryHistory = addHistoryEntry(queryHistory, query, QUERY_HISTORY_LIMIT);
   ids.forEach(id => {
     if (!getEngineByID(id)) return;
-    engineQueryHistory[id] = addHistoryEntry(getEngineHistory(id), query, ENGINE_HISTORY_LIMIT);
+    engineQueryHistory[getEngineHistoryKey(id)] = addHistoryEntry(getEngineHistory(id), query, ENGINE_HISTORY_LIMIT);
   });
   persistQueryHistory();
   updateEngineHistoryIndicators();
@@ -1924,11 +2043,264 @@ function loadQueryHistory() {
     const saved = JSON.parse(localStorage.getItem(ENGINE_HISTORY_KEY));
     if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
       Object.keys(saved).forEach(id => {
-        if (getEngineByID(id)) engineQueryHistory[id] = normalizeHistoryEntries(saved[id], ENGINE_HISTORY_LIMIT);
+        const stableKey = getEngineByID(id) ? getEngineHistoryKey(id) : id;
+        engineQueryHistory[stableKey] = normalizeHistoryEntries(saved[id], ENGINE_HISTORY_LIMIT);
       });
     }
   } catch { engineQueryHistory = {}; }
   updateEngineHistoryIndicators();
+}
+
+const ENGINE_OVERLAY_KEY = 'searchhub_engine_overlay_v1';
+let engineOverlay = { version: 1, added: {}, removed: {}, order: {} };
+
+function emptyEngineOverlay() {
+  return { version: 1, added: {}, removed: {}, order: {} };
+}
+
+function normalizeCustomEngine(value) {
+  if (!value || typeof value !== 'object') return null;
+  const name = typeof value.name === 'string' ? value.name.trim().slice(0, 80) : '';
+  const url = typeof value.url === 'string' ? value.url.trim().slice(0, 500) : '';
+  const desc = typeof value.desc === 'string' ? value.desc.trim().slice(0, 160) : '';
+  if (!name || !/^https?:\/\//i.test(url)) return null;
+  return { name, url, desc };
+}
+
+function normalizeEngineOverlay(value) {
+  const overlay = emptyEngineOverlay();
+  if (!value || typeof value !== 'object' || value.version !== 1) return overlay;
+  Object.keys(value.added || {}).forEach(category => {
+    const seen = new Set();
+    const engines = Array.isArray(value.added[category]) ? value.added[category].map(normalizeCustomEngine).filter(Boolean).filter(engine => {
+      if (seen.has(engine.url)) return false;
+      seen.add(engine.url);
+      return true;
+    }) : [];
+    if (engines.length) overlay.added[category] = engines;
+  });
+  Object.keys(value.removed || {}).forEach(category => {
+    const urls = Array.isArray(value.removed[category]) ? value.removed[category].filter(url => typeof url === 'string').map(url => url.slice(0, 500)) : [];
+    if (urls.length) overlay.removed[category] = [...new Set(urls)];
+  });
+  Object.keys(value.order || {}).forEach(category => {
+    const urls = Array.isArray(value.order[category]) ? value.order[category].filter(url => typeof url === 'string').map(url => url.slice(0, 500)) : [];
+    if (urls.length) overlay.order[category] = [...new Set(urls)];
+  });
+  return overlay;
+}
+
+function applyEngineOverlay(base, overlay) {
+  const active = cloneEngineData(base);
+  Object.keys(active).forEach(category => {
+    const removed = new Set(overlay.removed[category] || []);
+    const engines = active[category].engines.filter(engine => !removed.has(engine.url));
+    (overlay.added[category] || []).forEach(engine => {
+      if (!engines.some(existing => existing.url === engine.url)) engines.push({ ...engine });
+    });
+    const order = overlay.order[category] || [];
+    if (order.length) {
+      const ranks = new Map(order.map((url, index) => [url, index]));
+      engines.sort((left, right) => {
+        const leftRank = ranks.has(left.url) ? ranks.get(left.url) : Number.MAX_SAFE_INTEGER;
+        const rightRank = ranks.has(right.url) ? ranks.get(right.url) : Number.MAX_SAFE_INTEGER;
+        return leftRank - rightRank;
+      });
+    }
+    active[category].engines = engines;
+  });
+  return active;
+}
+
+function persistEngineOverlay() {
+  try { localStorage.setItem(ENGINE_OVERLAY_KEY, JSON.stringify(engineOverlay)); } catch {}
+}
+
+function loadEngineOverlay() {
+  try { engineOverlay = normalizeEngineOverlay(JSON.parse(localStorage.getItem(ENGINE_OVERLAY_KEY))); } catch { engineOverlay = emptyEngineOverlay(); }
+  ENGINE_DATA = applyEngineOverlay(DEFAULT_ENGINE_DATA, engineOverlay);
+}
+
+function engineIdentity(category, engine) {
+  return category + '::' + engine.url;
+}
+
+function captureSelectedEngineKeys() {
+  const selected = new Set();
+  checkedEngines.forEach(id => {
+    const engine = getEngineByID(id);
+    const category = getCategoryForID(id);
+    if (engine && category) selected.add(engineIdentity(category, engine));
+  });
+  return selected;
+}
+
+function syncEngineOverlayCategory(category) {
+  const defaults = DEFAULT_ENGINE_DATA[category]?.engines || [];
+  const current = ENGINE_DATA[category]?.engines || [];
+  const defaultUrls = new Set(defaults.map(engine => engine.url));
+  const currentUrls = new Set(current.map(engine => engine.url));
+  const added = current.filter(engine => !defaultUrls.has(engine.url)).map(normalizeCustomEngine).filter(Boolean);
+  const removed = defaults.filter(engine => !currentUrls.has(engine.url)).map(engine => engine.url);
+  const defaultOrder = defaults.map(engine => engine.url);
+  const currentOrder = current.map(engine => engine.url);
+  if (added.length) engineOverlay.added[category] = added; else delete engineOverlay.added[category];
+  if (removed.length) engineOverlay.removed[category] = removed; else delete engineOverlay.removed[category];
+  if (defaultOrder.length === currentOrder.length && defaultOrder.every((url, index) => url === currentOrder[index])) delete engineOverlay.order[category];
+  else if (currentOrder.length) engineOverlay.order[category] = currentOrder;
+  else delete engineOverlay.order[category];
+}
+
+function refreshEngineUI(selectedKeys) {
+  const activeCategory = document.querySelector('.tab.active')?.dataset.cat;
+  document.getElementById('tabs').innerHTML = '';
+  document.getElementById('panels').innerHTML = '';
+  buildUI();
+  checkedEngines = new Set();
+  document.querySelectorAll('.engine-item').forEach(item => {
+    const engine = getEngineByID(item.dataset.id);
+    if (!engine || !selectedKeys.has(engineIdentity(item.dataset.cat, engine))) return;
+    checkedEngines.add(item.dataset.id);
+    item.classList.add('checked');
+  });
+  updateCount();
+  saveState();
+  updateEngineHistoryIndicators();
+  updateTabArrows();
+  if (activeCategory && ENGINE_DATA[activeCategory]) switchTab(activeCategory);
+}
+
+function getEditorCategory() {
+  return document.getElementById('editorCategory').value;
+}
+
+function renderEditorEngineList() {
+  const category = getEditorCategory();
+  const list = document.getElementById('editorEngineList');
+  const count = document.getElementById('editorCount');
+  const engines = ENGINE_DATA[category]?.engines || [];
+  list.innerHTML = '';
+  count.textContent = engines.length + ' engine' + (engines.length === 1 ? '' : 's');
+  engines.forEach((engine, index) => {
+    const row = document.createElement('div');
+    row.className = 'editor-engine-row';
+    const details = document.createElement('div');
+    details.className = 'editor-engine-details';
+    const name = document.createElement('div');
+    name.className = 'editor-engine-name';
+    name.textContent = engine.name;
+    const url = document.createElement('div');
+    url.className = 'editor-engine-url';
+    url.textContent = engine.url;
+    details.append(name, url);
+
+    const actions = document.createElement('div');
+    actions.className = 'editor-engine-actions';
+    const up = document.createElement('button');
+    up.type = 'button';
+    up.className = 'editor-action';
+    up.textContent = '\u2191';
+    up.title = 'Move up';
+    up.disabled = index === 0;
+    up.addEventListener('click', () => moveEditorEngine(index, -1));
+    const down = document.createElement('button');
+    down.type = 'button';
+    down.className = 'editor-action';
+    down.textContent = '\u2193';
+    down.title = 'Move down';
+    down.disabled = index === engines.length - 1;
+    down.addEventListener('click', () => moveEditorEngine(index, 1));
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'editor-action remove';
+    remove.textContent = '\u00d7';
+    remove.title = 'Remove engine';
+    remove.addEventListener('click', () => removeEditorEngine(index));
+    actions.append(up, down, remove);
+    row.append(details, actions);
+    list.appendChild(row);
+  });
+}
+
+function populateEditorCategories() {
+  const select = document.getElementById('editorCategory');
+  const categories = Object.keys(ENGINE_DATA);
+  select.innerHTML = '';
+  categories.forEach(category => {
+    const option = document.createElement('option');
+    option.value = category;
+    option.textContent = category;
+    select.appendChild(option);
+  });
+  if (categories.length) select.value = categories[0];
+  renderEditorEngineList();
+}
+
+function commitEditorCategoryChange(category, selectedKeys) {
+  syncEngineOverlayCategory(category);
+  persistEngineOverlay();
+  refreshEngineUI(selectedKeys);
+  renderEditorEngineList();
+}
+
+function moveEditorEngine(index, direction) {
+  const category = getEditorCategory();
+  const engines = ENGINE_DATA[category]?.engines;
+  const target = index + direction;
+  if (!engines || target < 0 || target >= engines.length) return;
+  const selectedKeys = captureSelectedEngineKeys();
+  [engines[index], engines[target]] = [engines[target], engines[index]];
+  commitEditorCategoryChange(category, selectedKeys);
+}
+
+function removeEditorEngine(index) {
+  const category = getEditorCategory();
+  const engines = ENGINE_DATA[category]?.engines;
+  if (!engines || !engines[index]) return;
+  const selectedKeys = captureSelectedEngineKeys();
+  engines.splice(index, 1);
+  commitEditorCategoryChange(category, selectedKeys);
+  showToast('Engine removed from ' + category);
+}
+
+function addEditorEngine(event) {
+  event.preventDefault();
+  const category = getEditorCategory();
+  const engine = normalizeCustomEngine({
+    name: document.getElementById('editorName').value,
+    url: document.getElementById('editorUrl').value,
+    desc: document.getElementById('editorDesc').value
+  });
+  if (!engine) { showToast('Use a name and an http(s) engine URL'); return; }
+  const engines = ENGINE_DATA[category]?.engines;
+  if (!engines || engines.some(existing => existing.url === engine.url)) { showToast('That URL already exists in this category'); return; }
+  const selectedKeys = captureSelectedEngineKeys();
+  engines.push(engine);
+  commitEditorCategoryChange(category, selectedKeys);
+  document.getElementById('editorAddForm').reset();
+  showToast('Engine added to ' + category);
+}
+
+function resetEditorCategory() {
+  const category = getEditorCategory();
+  const selectedKeys = captureSelectedEngineKeys();
+  delete engineOverlay.added[category];
+  delete engineOverlay.removed[category];
+  delete engineOverlay.order[category];
+  ENGINE_DATA = applyEngineOverlay(DEFAULT_ENGINE_DATA, engineOverlay);
+  persistEngineOverlay();
+  refreshEngineUI(selectedKeys);
+  renderEditorEngineList();
+  showToast(category + ' reset to defaults');
+}
+
+function openEngineEditor() {
+  populateEditorCategories();
+  document.getElementById('engineEditorOverlay').hidden = false;
+}
+
+function closeEngineEditor() {
+  document.getElementById('engineEditorOverlay').hidden = true;
 }
 
 function getOperatorValues() {
@@ -2194,6 +2566,7 @@ function updateTabArrows() {
 }
 
 // DOM bootstrap
+loadEngineOverlay();
 buildUI();
 loadState();
 loadQueryHistory();
@@ -2215,6 +2588,11 @@ document.getElementById('clearOperatorsBtn').addEventListener('click', clearOper
 document.getElementById('splitToggle').addEventListener('click', toggleSplitView);
 document.getElementById('splitClose').addEventListener('click', closeSplitView);
 document.getElementById('focusedToggle').addEventListener('click', toggleFocusedTab);
+document.getElementById('engineEditorToggle').addEventListener('click', openEngineEditor);
+document.getElementById('engineEditorClose').addEventListener('click', closeEngineEditor);
+document.getElementById('editorCategory').addEventListener('change', renderEditorEngineList);
+document.getElementById('editorAddForm').addEventListener('submit', addEditorEngine);
+document.getElementById('editorResetCategory').addEventListener('click', resetEditorCategory);
 ['operatorSite', 'operatorFiletype', 'operatorAfter', 'operatorBefore'].forEach(id => {
   document.getElementById(id).addEventListener('input', saveOperatorState);
   document.getElementById(id).addEventListener('change', saveOperatorState);
@@ -2224,6 +2602,7 @@ document.addEventListener('click', event => {
 });
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape' && !document.getElementById('splitOverlay').hidden) closeSplitView();
+  if (event.key === 'Escape' && !document.getElementById('engineEditorOverlay').hidden) closeEngineEditor();
   if (event.key === 'Enter' && event.ctrlKey && !event.altKey && !event.metaKey) {
     event.preventDefault();
     doSearch();

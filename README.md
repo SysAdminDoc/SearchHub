@@ -50,6 +50,7 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 | Split View | Show up to four selected engines side-by-side with an Open in tab fallback |
 | Focused Tab | Optionally reuse the most recently opened tab for the next search |
 | Keyboard Shortcuts | `/` focuses search, `1–9`/`0` switch category tabs, `Ctrl+Enter` searches |
+| Engine Editor | Add, remove, reorder, and reset engines through a localStorage overlay |
 | State Validation | Stale/broken saved state is silently discarded on load |
 | Dark Theme | Deep purple accent glassmorphism UI — no light mode |
 | Responsive | Adapts to mobile with 2-column grid and compact tabs |
@@ -113,6 +114,8 @@ Each selected engine opens in its own browser tab with your query pre-filled in 
 
 **Keyboard shortcuts:** Press `/` from anywhere outside an input to focus search, `1`–`9` or `0` to switch the first ten category tabs, and `Ctrl+Enter` to launch the current search from any control.
 
+**Engine editor:** Open **Manage** to customize a category. Additions, removals, and ordering changes stay local to this browser; **Reset category** restores the bundled defaults.
+
 ## Hosting
 
 ### GitHub Pages
@@ -135,7 +138,7 @@ Browsers limit how many popups a single click can open. SearchHub staggers them 
 Browser CORS restrictions prevent fetching results from other domains client-side. A server-side proxy would work but defeats the goal of a single static file with no backend.
 
 **Can I add my own engines?**
-Yes — edit the `ENGINE_DATA` object in the `<script>` block. Add entries in the format:
+Yes — open **Manage** to add an engine to an existing category, or edit the `ENGINE_DATA` object in the `<script>` block for source-level changes. Add entries in the format:
 ```js
 { name: "Engine Name", url: "https://example.com/search?q=", desc: "Short description" },
 ```
