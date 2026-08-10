@@ -42,3 +42,66 @@ All notable changes to SearchHub will be documented in this file.
 - Changed: Update README.md
 - Added: Add files via upload
 - Added: Add files via upload
+
+## Roadmap archive — 2026-08-10 — ROADMAP.md
+
+<details>
+<summary>Original roadmap snapshot</summary>
+
+```markdown
+# SearchHub Roadmap
+
+Roadmap for SearchHub, a single-file client-side launcher that fires a query across 538 search engines in 29 categories. Constraint: stay a zero-dependency static HTML file.
+
+## Planned Features
+
+### Search flow
+
+### Engine management
+
+### Categories to expand
+
+### UX polish
+
+### Packaging
+
+## Competitive Research
+
+- **SearXNG** proxies multiple engines server-side and aggregates results - this repo intentionally goes the other way, but could add a toggle to hand off to a user-configured SearXNG instance.
+- **Vimium / Surfingkeys** use command palettes for engine dispatch (`t <keyword> <query>`); SearchHub could add an `omnibar`-style palette over the current grid for power users.
+- **DuckDuckGo bangs** (`!g foo`, `!yt bar`) are the best-known single-shot pattern; add parsing so any of SearchHub's 538 engines can be invoked by bang prefix.
+- **Kagi Quickbar / Raycast extensions** show that a launcher-style UI beats a full page for quick queries; a compact popup mode (300x400) variant would fit this pattern.
+
+## Nice-to-Haves
+
+
+## Open-Source Research (Round 2)
+
+### Related OSS Projects
+- https://github.com/garywill/BigSearch — Closest peer: 60+ built-in engines, GET/POST, user-defined engines via simple JSON, browser ext + demo web-app
+- https://github.com/fccview/degoog — Plugin/extension/slot/transport architecture — heavily modular aggregator with bang-commands
+- https://github.com/searxng/searxng — Canonical metasearch reference (server-side), privacy stance, category/engine config format
+- https://github.com/benbusby/whoogle-search — Self-hosted Google proxy, minimal JS/CSS bundling pattern
+- https://github.com/e0gen/MultiSearch — `ISearchEngine` interface abstraction (C#) with HTML-parse and API dual impls
+- https://github.com/noidontdig/search-engine-aggregator — Simple multi-engine merge implementation
+- https://github.com/topics/metasearch-engine — Topic hub
+
+### Features to Borrow
+- Engine JSON schema: `{ "Google": "https://www.google.com/search?q={0}" }` minimal, but support POST engines via `{ method, url, body }` (BigSearch)
+- "Bang commands" in the query box — `!yt cats` routes only to YouTube engine (degoog, DuckDuckGo pattern)
+- Slot plugins — small panels that inject above/below results from a query trigger (weather, calc, define:) (degoog)
+- Engine categories with per-category hotkeys (`1` = web, `2` = images, `3` = video) (SearXNG)
+- Saved "engine packs" shareable as a URL fragment (`#pack=foo+bar+baz`) — user can bookmark a preset (new idea borrowed from Whoogle config-file pattern)
+- Keyboard-first UX: `/` focus, `Tab` cycle engines, `Enter` multi-open, `Shift+Enter` single (SearXNG behavior)
+- Engine health badges — auto-probe last-success, dim dead engines (SearXNG)
+- Optional privacy proxy layer — rewrite target URLs through a user-provided proxy (Whoogle)
+
+### Patterns & Architectures Worth Studying
+- Plugin manifest loaded at runtime from user folder vs baked-in engines (degoog modularity)
+- HTML-parse vs API dual-path abstraction for each engine (MultiSearch's ISearchEngine) — fallback when API key missing
+- Single-file with `<template>` partials hydrated by tiny JS — keeps "single file, zero deps" promise while being composable
+- IndexedDB persistence for user engines + packs with versioned schema migration so `searchhub.html` remains portable across updates
+- Split-context loader: same file runs standalone OR as Chrome MV3 extension OR PWA, feature-detects once
+```
+
+</details>
