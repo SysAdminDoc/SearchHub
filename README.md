@@ -6,6 +6,16 @@
 ![No Backend](https://img.shields.io/badge/backend-none-lightgrey)
 ![Engines](https://img.shields.io/badge/engines-557-6c6cff)
 
+<p align="center">
+  <a href="https://ko-fi.com/X8K126YVER">
+    <img height="42" src="https://storage.ko-fi.com/cdn/kofi2.png?v=3" alt="Buy me a coffee on Ko-fi" />
+  </a>
+</p>
+
+<p align="center">
+  <sub><em>If this project helps you, a coffee helps me keep working on it.</em></sub>
+</p>
+
 > Search 557 engines across 31 categories from a single page.
 
 ## Quick Start
